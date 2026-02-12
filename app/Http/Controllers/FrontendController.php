@@ -605,7 +605,7 @@ public function updateAddress(Request $request, $id)
         'pincode'  => $request->edit_pincode,
         'is_default' => $request->edit_is_default ? 1 : 0,
     ]);
-
+ 
     return response()->json([
         'success' => true,
         'message' => 'Address updated successfully!'
