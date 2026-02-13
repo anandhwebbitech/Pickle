@@ -9,14 +9,13 @@ use App\Http\Controllers\FrontendController;
 use Illuminate\Support\Facades\Route;
 
 
-
-
 Route::get('/', action: [FrontendController::class,'Home'])->name('home');
 Route::get('home', action: [FrontendController::class,'Home'])->name('home');
 Route::get('about', action: [FrontendController::class,'About'])->name('about');
 Route::get('contact', action: [FrontendController::class,'Contact'])->name('contact');
 Route::get('cart', action: [FrontendController::class,'Cart'])->name('cart');
 Route::get('private_Policy', action: [FrontendController::class,'Private_Policy'])->name('private_Policy');
+Route::get('shipping_Policy', action: [FrontendController::class,'Shipping_policy'])->name('shipping_policy');
 Route::get('terms-and-condition', action: [FrontendController::class,'Terms'])->name('terms');
 Route::get('product', action: [FrontendController::class,'Product'])->name('product');
 Route::get('wishlist', action: [FrontendController::class,'Wishlist'])->name('wishlist');
@@ -25,12 +24,15 @@ Route::get('signup', action: [FrontendController::class,'Signup'])->name('signup
 Route::get('checkout', action: [FrontendController::class,'Checkout'])->name('checkout');
 Route::get('profile', action: [FrontendController::class,'Profile'])->name('profile');
 Route::get('product-details/{id}', action: [FrontendController::class,'ProductDetails'])->name('product-details');
+Route::get('/cart/navbar', [FrontendController::class, 'navbarCart'])->name('cart.navbar');
+
 // Route::get('product-details/{id}', action: [FrontendController::class,'ProductDetails'])->name('product-details');
 // Route::get('/product/{id}', [FrontendController::class, 'ProductShow'])->name('product.show');
 // AUTH
 Route::post('/signup-store', [AuthController::class, 'store'])->name('signup.store');
 Route::post('toggle-wishlist/{id}', [FrontendController::class, 'toggleWishlist']);
-Route::post('/login-ajax', [AuthController::class, 'login'])->name('login.ajax');
+Route::post('/toggle-wishlists/{id}', [FrontendController::class, 'toggleWishlist'])->name('toggle.wishlist');
+Route::post('/login-ajax', [AuthController::class, 'login'])->name(name: 'login.ajax');
 Route::get('/wishlist/data', [FrontendController::class, 'wishlistData'])->name('wishlist.data');
 Route::post('/add-to-cart/{id}', [FrontendController::class, 'addToCart'])->name('cart.add');
 Route::post('/address/update/{id}', [FrontendController::class, 'updateAddress'])->name('address.update');

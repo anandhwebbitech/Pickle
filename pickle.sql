@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Feb 12, 2026 at 01:22 PM
+-- Generation Time: Feb 13, 2026 at 01:12 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -71,9 +71,7 @@ CREATE TABLE `carts` (
 --
 
 INSERT INTO `carts` (`id`, `product_id`, `category_id`, `user_id`, `quantity`, `weight`, `price`, `discount`, `total_amount`, `status`, `created_at`, `updated_at`) VALUES
-(2, 6, 1, 2, 2, '100', 100, 0, 200, 1, '2026-02-11 11:57:44', '2026-02-12 05:41:29'),
-(3, 5, 1, 2, 2, '100', 100, 0, 200, 1, '2026-02-11 12:02:17', '2026-02-12 05:47:28'),
-(4, 3, 1, 2, 2, '100', 100, 0, 200, 1, '2026-02-12 04:48:52', '2026-02-12 05:35:50');
+(23, 3, 1, 2, 4, '100', 100, 0, 400, 1, '2026-02-13 07:35:39', '2026-02-13 10:47:05');
 
 -- --------------------------------------------------------
 
@@ -111,15 +109,18 @@ CREATE TABLE `coupons` (
   `value` int(11) NOT NULL,
   `status` int(11) NOT NULL DEFAULT 1,
   `created_at` datetime NOT NULL,
-  `updated_at` datetime NOT NULL
+  `updated_at` datetime NOT NULL,
+  `expiry_date` datetime DEFAULT NULL,
+  `use_limit` int(11) NOT NULL,
+  `use_count` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `coupons`
 --
 
-INSERT INTO `coupons` (`id`, `code`, `type`, `value`, `status`, `created_at`, `updated_at`) VALUES
-(1, 'SAVE10', 0, 257, 1, '2026-02-10 12:00:03', '2026-02-10 12:16:43');
+INSERT INTO `coupons` (`id`, `code`, `type`, `value`, `status`, `created_at`, `updated_at`, `expiry_date`, `use_limit`, `use_count`) VALUES
+(1, 'SAVE10', 0, 257, 1, '2026-02-10 12:00:03', '2026-02-10 12:16:43', '2026-02-28 17:20:16', 12, 1);
 
 -- --------------------------------------------------------
 
@@ -235,7 +236,19 @@ INSERT INTO `products` (`id`, `name`, `category_id`, `description`, `deals`, `we
 (3, 'Mango Pickle', 1, 'Fresh curry leaves are pounded with perfection and processed along with the choicest of spices to bring forth a healthy and tasty gastronomic treat. Just add ghee to hot rice and sprinkle Priya Curry Leaf Powder generously over it, or get it on board with idlis, dosas or upma. Pure bliss!', 1, '[{\"weight\":\"100\",\"price\":\"100\"},{\"weight\":\"500\",\"price\":\"450\"},{\"weight\":\"1000\",\"price\":\"850\"}]', '1770792188.webp', '[\"Curry Leaves Powder (11%)\",\"Refined Rice Bran Oil\",\"Garlic\",\"Coriander Powder\",\"Iodized Salt\",\"Chilli Powder\",\"Black Gram Lentils\",\"Cumin & Sesame Powder (1%)\",\"uploads\\/products\",\"Mango Pickle\"]', 250, 1, '2026-02-11 06:43:08', '2026-02-11 06:43:08'),
 (4, 'Mango Pickle', 1, 'Fresh curry leaves are pounded with perfection and processed along with the choicest of spices to bring forth a healthy and tasty gastronomic treat. Just add ghee to hot rice and sprinkle Priya Curry Leaf Powder generously over it, or get it on board with idlis, dosas or upma. Pure bliss!', 1, '[{\"weight\":\"100\",\"price\":\"100\"},{\"weight\":\"500\",\"price\":\"450\"},{\"weight\":\"1000\",\"price\":\"850\"}]', '1770792188.webp', '[\"Curry Leaves Powder (11%)\",\"Refined Rice Bran Oil\",\"Garlic\",\"Coriander Powder\",\"Iodized Salt\",\"Chilli Powder\",\"Black Gram Lentils\",\"Cumin & Sesame Powder (1%)\",\"uploads\\/products\",\"Mango Pickle\"]', 250, 1, '2026-02-11 06:43:08', '2026-02-11 06:43:08'),
 (5, 'Curry Leaf Powder', 1, 'Fresh curry leaves are pounded with perfection and processed along with the choicest of spices to bring forth a healthy and tasty gastronomic treat. Just add ghee to hot rice and sprinkle Priya Curry Leaf Powder generously over it, or get it on board with idlis, dosas or upma. Pure bliss!', 1, '[{\"weight\":\"100\",\"price\":\"100\"},{\"weight\":\"500\",\"price\":\"450\"},{\"weight\":\"1000\",\"price\":\"850\"}]', '1770791978.webp', '[\"Curry Leaves Powder (11%)\",\"Refined Rice Bran Oil\",\"Coriander Powder\",\"Garlic\",\"Iodized Salt\",\"Chilli Powder\",\"Black Gram Lentils\",\"Cumin & Sesame Powder (1%)\"]', 200, 1, '2026-02-11 06:39:38', '2026-02-11 06:39:38'),
-(6, 'Mango Pickle', 1, 'Fresh curry leaves are pounded with perfection and processed along with the choicest of spices to bring forth a healthy and tasty gastronomic treat. Just add ghee to hot rice and sprinkle Priya Curry Leaf Powder generously over it, or get it on board with idlis, dosas or upma. Pure bliss!', 1, '[{\"weight\":\"100\",\"price\":\"100\"},{\"weight\":\"500\",\"price\":\"450\"},{\"weight\":\"1000\",\"price\":\"850\"}]', '1770792188.webp', '[\"Curry Leaves Powder (11%)\",\"Refined Rice Bran Oil\",\"Garlic\",\"Coriander Powder\",\"Iodized Salt\",\"Chilli Powder\",\"Black Gram Lentils\",\"Cumin & Sesame Powder (1%)\",\"uploads\\/products\",\"Mango Pickle\"]', 250, 1, '2026-02-11 06:43:08', '2026-02-11 06:43:08');
+(6, 'Mango Pickle', 1, 'Fresh curry leaves are pounded with perfection and processed along with the choicest of spices to bring forth a healthy and tasty gastronomic treat. Just add ghee to hot rice and sprinkle Priya Curry Leaf Powder generously over it, or get it on board with idlis, dosas or upma. Pure bliss!', 1, '[{\"weight\":\"100\",\"price\":\"100\"},{\"weight\":\"500\",\"price\":\"450\"},{\"weight\":\"1000\",\"price\":\"850\"}]', '1770792188.webp', '[\"Curry Leaves Powder (11%)\",\"Refined Rice Bran Oil\",\"Garlic\",\"Coriander Powder\",\"Iodized Salt\",\"Chilli Powder\",\"Black Gram Lentils\",\"Cumin & Sesame Powder (1%)\",\"uploads\\/products\",\"Mango Pickle\"]', 250, 1, '2026-02-11 06:43:08', '2026-02-11 06:43:08'),
+(7, 'Curry Leaf Powder', 1, 'Fresh curry leaves are pounded with perfection and processed along with the choicest of spices to bring forth a healthy and tasty gastronomic treat. Just add ghee to hot rice and sprinkle Priya Curry Leaf Powder generously over it, or get it on board with idlis, dosas or upma. Pure bliss!', 1, '[{\"weight\":\"100\",\"price\":\"100\"},{\"weight\":\"500\",\"price\":\"450\"},{\"weight\":\"1000\",\"price\":\"850\"}]', '1770791978.webp', '[\"Curry Leaves Powder (11%)\",\"Refined Rice Bran Oil\",\"Coriander Powder\",\"Garlic\",\"Iodized Salt\",\"Chilli Powder\",\"Black Gram Lentils\",\"Cumin & Sesame Powder (1%)\"]', 200, 1, '2026-02-11 06:39:38', '2026-02-11 06:39:38'),
+(8, 'Mango Pickle', 1, 'Fresh curry leaves are pounded with perfection and processed along with the choicest of spices to bring forth a healthy and tasty gastronomic treat. Just add ghee to hot rice and sprinkle Priya Curry Leaf Powder generously over it, or get it on board with idlis, dosas or upma. Pure bliss!', 1, '[{\"weight\":\"100\",\"price\":\"100\"},{\"weight\":\"500\",\"price\":\"450\"},{\"weight\":\"1000\",\"price\":\"850\"}]', '1770792188.webp', '[\"Curry Leaves Powder (11%)\",\"Refined Rice Bran Oil\",\"Garlic\",\"Coriander Powder\",\"Iodized Salt\",\"Chilli Powder\",\"Black Gram Lentils\",\"Cumin & Sesame Powder (1%)\",\"uploads\\/products\",\"Mango Pickle\"]', 250, 1, '2026-02-11 06:43:08', '2026-02-11 06:43:08'),
+(9, 'Curry Leaf Powder', 1, 'Fresh curry leaves are pounded with perfection and processed along with the choicest of spices to bring forth a healthy and tasty gastronomic treat. Just add ghee to hot rice and sprinkle Priya Curry Leaf Powder generously over it, or get it on board with idlis, dosas or upma. Pure bliss!', 1, '[{\"weight\":\"100\",\"price\":\"100\"},{\"weight\":\"500\",\"price\":\"450\"},{\"weight\":\"1000\",\"price\":\"850\"}]', '1770791978.webp', '[\"Curry Leaves Powder (11%)\",\"Refined Rice Bran Oil\",\"Coriander Powder\",\"Garlic\",\"Iodized Salt\",\"Chilli Powder\",\"Black Gram Lentils\",\"Cumin & Sesame Powder (1%)\"]', 200, 1, '2026-02-11 06:39:38', '2026-02-11 06:39:38'),
+(10, 'Curry Leaf Powder', 1, 'Fresh curry leaves are pounded with perfection and processed along with the choicest of spices to bring forth a healthy and tasty gastronomic treat. Just add ghee to hot rice and sprinkle Priya Curry Leaf Powder generously over it, or get it on board with idlis, dosas or upma. Pure bliss!', 1, '[{\"weight\":\"100\",\"price\":\"100\"},{\"weight\":\"500\",\"price\":\"450\"},{\"weight\":\"1000\",\"price\":\"850\"}]', '1770791978.webp', '[\"Curry Leaves Powder (11%)\",\"Refined Rice Bran Oil\",\"Coriander Powder\",\"Garlic\",\"Iodized Salt\",\"Chilli Powder\",\"Black Gram Lentils\",\"Cumin & Sesame Powder (1%)\"]', 200, 1, '2026-02-11 06:39:38', '2026-02-11 06:39:38'),
+(11, 'Mango Pickle', 1, 'Fresh curry leaves are pounded with perfection and processed along with the choicest of spices to bring forth a healthy and tasty gastronomic treat. Just add ghee to hot rice and sprinkle Priya Curry Leaf Powder generously over it, or get it on board with idlis, dosas or upma. Pure bliss!', 1, '[{\"weight\":\"100\",\"price\":\"100\"},{\"weight\":\"500\",\"price\":\"450\"},{\"weight\":\"1000\",\"price\":\"850\"}]', '1770792188.webp', '[\"Curry Leaves Powder (11%)\",\"Refined Rice Bran Oil\",\"Garlic\",\"Coriander Powder\",\"Iodized Salt\",\"Chilli Powder\",\"Black Gram Lentils\",\"Cumin & Sesame Powder (1%)\",\"uploads\\/products\",\"Mango Pickle\"]', 250, 1, '2026-02-11 06:43:08', '2026-02-11 06:43:08'),
+(12, 'Curry Leaf Powder', 1, 'Fresh curry leaves are pounded with perfection and processed along with the choicest of spices to bring forth a healthy and tasty gastronomic treat. Just add ghee to hot rice and sprinkle Priya Curry Leaf Powder generously over it, or get it on board with idlis, dosas or upma. Pure bliss!', 1, '[{\"weight\":\"100\",\"price\":\"100\"},{\"weight\":\"500\",\"price\":\"450\"},{\"weight\":\"1000\",\"price\":\"850\"}]', '1770791978.webp', '[\"Curry Leaves Powder (11%)\",\"Refined Rice Bran Oil\",\"Coriander Powder\",\"Garlic\",\"Iodized Salt\",\"Chilli Powder\",\"Black Gram Lentils\",\"Cumin & Sesame Powder (1%)\"]', 200, 1, '2026-02-11 06:39:38', '2026-02-11 06:39:38'),
+(13, 'Mango Pickle', 1, 'Fresh curry leaves are pounded with perfection and processed along with the choicest of spices to bring forth a healthy and tasty gastronomic treat. Just add ghee to hot rice and sprinkle Priya Curry Leaf Powder generously over it, or get it on board with idlis, dosas or upma. Pure bliss!', 1, '[{\"weight\":\"100\",\"price\":\"100\"},{\"weight\":\"500\",\"price\":\"450\"},{\"weight\":\"1000\",\"price\":\"850\"}]', '1770792188.webp', '[\"Curry Leaves Powder (11%)\",\"Refined Rice Bran Oil\",\"Garlic\",\"Coriander Powder\",\"Iodized Salt\",\"Chilli Powder\",\"Black Gram Lentils\",\"Cumin & Sesame Powder (1%)\",\"uploads\\/products\",\"Mango Pickle\"]', 250, 1, '2026-02-11 06:43:08', '2026-02-11 06:43:08'),
+(14, 'Curry Leaf Powder', 1, 'Fresh curry leaves are pounded with perfection and processed along with the choicest of spices to bring forth a healthy and tasty gastronomic treat. Just add ghee to hot rice and sprinkle Priya Curry Leaf Powder generously over it, or get it on board with idlis, dosas or upma. Pure bliss!', 1, '[{\"weight\":\"100\",\"price\":\"100\"},{\"weight\":\"500\",\"price\":\"450\"},{\"weight\":\"1000\",\"price\":\"850\"}]', '1770791978.webp', '[\"Curry Leaves Powder (11%)\",\"Refined Rice Bran Oil\",\"Coriander Powder\",\"Garlic\",\"Iodized Salt\",\"Chilli Powder\",\"Black Gram Lentils\",\"Cumin & Sesame Powder (1%)\"]', 200, 1, '2026-02-11 06:39:38', '2026-02-11 06:39:38'),
+(15, 'Mango Pickle', 1, 'Fresh curry leaves are pounded with perfection and processed along with the choicest of spices to bring forth a healthy and tasty gastronomic treat. Just add ghee to hot rice and sprinkle Priya Curry Leaf Powder generously over it, or get it on board with idlis, dosas or upma. Pure bliss!', 1, '[{\"weight\":\"100\",\"price\":\"100\"},{\"weight\":\"500\",\"price\":\"450\"},{\"weight\":\"1000\",\"price\":\"850\"}]', '1770792188.webp', '[\"Curry Leaves Powder (11%)\",\"Refined Rice Bran Oil\",\"Garlic\",\"Coriander Powder\",\"Iodized Salt\",\"Chilli Powder\",\"Black Gram Lentils\",\"Cumin & Sesame Powder (1%)\",\"uploads\\/products\",\"Mango Pickle\"]', 250, 1, '2026-02-11 06:43:08', '2026-02-11 06:43:08'),
+(16, 'Curry Leaf Powder', 1, 'Fresh curry leaves are pounded with perfection and processed along with the choicest of spices to bring forth a healthy and tasty gastronomic treat. Just add ghee to hot rice and sprinkle Priya Curry Leaf Powder generously over it, or get it on board with idlis, dosas or upma. Pure bliss!', 1, '[{\"weight\":\"100\",\"price\":\"100\"},{\"weight\":\"500\",\"price\":\"450\"},{\"weight\":\"1000\",\"price\":\"850\"}]', '1770791978.webp', '[\"Curry Leaves Powder (11%)\",\"Refined Rice Bran Oil\",\"Coriander Powder\",\"Garlic\",\"Iodized Salt\",\"Chilli Powder\",\"Black Gram Lentils\",\"Cumin & Sesame Powder (1%)\"]', 200, 1, '2026-02-11 06:39:38', '2026-02-11 06:39:38'),
+(17, 'Curry Leaf Powder', 1, 'Fresh curry leaves are pounded with perfection and processed along with the choicest of spices to bring forth a healthy and tasty gastronomic treat. Just add ghee to hot rice and sprinkle Priya Curry Leaf Powder generously over it, or get it on board with idlis, dosas or upma. Pure bliss!', 1, '[{\"weight\":\"100\",\"price\":\"100\"},{\"weight\":\"500\",\"price\":\"450\"},{\"weight\":\"1000\",\"price\":\"850\"}]', '1770791978.webp', '[\"Curry Leaves Powder (11%)\",\"Refined Rice Bran Oil\",\"Coriander Powder\",\"Garlic\",\"Iodized Salt\",\"Chilli Powder\",\"Black Gram Lentils\",\"Cumin & Sesame Powder (1%)\"]', 200, 1, '2026-02-11 06:39:38', '2026-02-11 06:39:38'),
+(18, 'Curry Leaf Powder', 1, 'Fresh curry leaves are pounded with perfection and processed along with the choicest of spices to bring forth a healthy and tasty gastronomic treat. Just add ghee to hot rice and sprinkle Priya Curry Leaf Powder generously over it, or get it on board with idlis, dosas or upma. Pure bliss!', 1, '[{\"weight\":\"100\",\"price\":\"100\"},{\"weight\":\"500\",\"price\":\"450\"},{\"weight\":\"1000\",\"price\":\"850\"}]', '1770791978.webp', '[\"Curry Leaves Powder (11%)\",\"Refined Rice Bran Oil\",\"Coriander Powder\",\"Garlic\",\"Iodized Salt\",\"Chilli Powder\",\"Black Gram Lentils\",\"Cumin & Sesame Powder (1%)\"]', 200, 1, '2026-02-11 06:39:38', '2026-02-11 06:39:38');
 
 -- --------------------------------------------------------
 
@@ -291,8 +304,8 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
-('gUFSyOVII0U2oe6al6Q3hi9aTlS7GXyHEYjs3rz4', 2, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiNUVTWDhtc25pNVlGZVlYOUVJeGdRajNIWTBMck9waHd3SXFUMko0cSI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6MzE6Imh0dHA6Ly9sb2NhbGhvc3QvcGlja2xlL3Byb2R1Y3QiO3M6NToicm91dGUiO3M6NzoicHJvZHVjdCI7fXM6NTA6ImxvZ2luX3dlYl81OWJhMzZhZGRjMmIyZjk0MDE1ODBmMDE0YzdmNThlYTRlMzA5ODlkIjtpOjI7fQ==', 1770898658),
-('UAXheIsjcB890j6cUDuKdv7O8gTBkn5RphKTzsfV', 2, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'YTo3OntzOjY6Il90b2tlbiI7czo0MDoiMW5xdG9FN3l5YWxkRnZTdUtlTDBFUTZUWlZTQW8yTWdlTzlYUWhWZyI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6MjY1OiJodHRwOi8vbG9jYWxob3N0L3BpY2tsZS9wcm9maWxlP190b2tlbj0xbnF0b0U3eXlhbGRGdlN1S2VMMEVRNlRaVlNBbzJNZ2VPOVhRaFZnJmFkZHJlc3NfbGluZTE9NjclMjBTZWNvbmQlMjBFeHRlbnNpb24mY2l0eT1RdWklMjBhdXRlbSUyMGN1bSUyMHN1c2NpcCZmdWxsX25hbWU9RW1pbHklMjBLaXJrJmlzX2RlZmF1bHQ9MSZtb2JpbGU9QXV0ZW0lMjBpZCUyMHJhdGlvbmUlMjBzYSZwaW5jb2RlPTc4NTY5ODUmc3RhdGU9RG9sb3JlbSUyMGNvbnNlY3RldHVyJTIwIjtzOjU6InJvdXRlIjtzOjc6InByb2ZpbGUiO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX1zOjUwOiJsb2dpbl93ZWJfNTliYTM2YWRkYzJiMmY5NDAxNTgwZjAxNGM3ZjU4ZWE0ZTMwOTg5ZCI7aToyO3M6MTA6Indpc2hsaXN0XzIiO2E6MTp7aTo2O2E6NTp7czoyOiJpZCI7aTo2O3M6MTI6InByb2R1Y3RfbmFtZSI7czoxMjoiTWFuZ28gUGlja2xlIjtzOjU6InByaWNlIjtOO3M6ODoicXVhbnRpdHkiO2k6MTtzOjExOiJwcm9kdWN0X2ltZyI7czoxNToiMTc3MDc5MjE4OC53ZWJwIjt9fXM6ODoiZGlzY291bnQiO2E6Mzp7czo0OiJjb2RlIjtzOjY6IlNBVkUxMCI7czo0OiJ0eXBlIjtpOjA7czo1OiJ2YWx1ZSI7aToyNTc7fXM6NjoiY291cG9uIjthOjI6e3M6NDoiY29kZSI7czo2OiJTQVZFMTAiO3M6ODoiZGlzY291bnQiO2k6MjU3O319', 1770889243);
+('EEwLGBEIEcRlBzNiJeiro4INbwpvLrAabDQSxcbE', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiR1NidFQydXJaaWFGY09IRnJrcGhwdTM0cXpuY3JmM3p0bjNFWG90bCI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6NDE6Imh0dHA6Ly9sb2NhbGhvc3QvcGlja2xlL3Byb2R1Y3QtZGV0YWlscy8yIjtzOjU6InJvdXRlIjtzOjE1OiJwcm9kdWN0LWRldGFpbHMiO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX19', 1770979074),
+('O4tkywxGHpuDbOp61d2dHqKCZZQwzuwgd5VDqawI', 2, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'YTo1OntzOjY6Il90b2tlbiI7czo0MDoibWVQclBTRWp4dmkwemtnNFBLcTN0TTkwbmN0REZURWRDcHpjQTlwQSI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6MzU6Imh0dHA6Ly9sb2NhbGhvc3QvcGlja2xlL2NhcnQvbmF2YmFyIjtzOjU6InJvdXRlIjtzOjExOiJjYXJ0Lm5hdmJhciI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fXM6NTA6ImxvZ2luX3dlYl81OWJhMzZhZGRjMmIyZjk0MDE1ODBmMDE0YzdmNThlYTRlMzA5ODlkIjtpOjI7czoxMDoid2lzaGxpc3RfMiI7YTo0OntpOjExO2E6NTp7czoyOiJpZCI7aToxMTtzOjEyOiJwcm9kdWN0X25hbWUiO3M6MTI6Ik1hbmdvIFBpY2tsZSI7czo1OiJwcmljZSI7TjtzOjg6InF1YW50aXR5IjtpOjE7czoxMToicHJvZHVjdF9pbWciO3M6MTU6IjE3NzA3OTIxODgud2VicCI7fWk6MjthOjU6e3M6MjoiaWQiO2k6MjtzOjEyOiJwcm9kdWN0X25hbWUiO3M6MTc6IkN1cnJ5IExlYWYgUG93ZGVyIjtzOjU6InByaWNlIjtOO3M6ODoicXVhbnRpdHkiO2k6MTtzOjExOiJwcm9kdWN0X2ltZyI7czoxNToiMTc3MDc5MTk3OC53ZWJwIjt9aTo1O2E6NTp7czoyOiJpZCI7aTo1O3M6MTI6InByb2R1Y3RfbmFtZSI7czoxNzoiQ3VycnkgTGVhZiBQb3dkZXIiO3M6NToicHJpY2UiO047czo4OiJxdWFudGl0eSI7aToxO3M6MTE6InByb2R1Y3RfaW1nIjtzOjE1OiIxNzcwNzkxOTc4LndlYnAiO31pOjM7YTo1OntzOjI6ImlkIjtpOjM7czoxMjoicHJvZHVjdF9uYW1lIjtzOjEyOiJNYW5nbyBQaWNrbGUiO3M6NToicHJpY2UiO047czo4OiJxdWFudGl0eSI7aToxO3M6MTE6InByb2R1Y3RfaW1nIjtzOjE1OiIxNzcwNzkyMTg4LndlYnAiO319fQ==', 1770984558);
 
 -- --------------------------------------------------------
 
@@ -350,9 +363,9 @@ CREATE TABLE `user_addresses` (
 --
 
 INSERT INTO `user_addresses` (`id`, `user_id`, `name`, `mobile`, `city`, `state`, `pincode`, `address`, `status`, `is_default`, `created_at`, `updated_at`) VALUES
-(1, 2, 'Dustin Buck', 'Libero ut deserunt c', 'Est maiores corrupti', 'Numquam in sint ape', '785685', '672 New Street', 1, 0, '2026-02-12 07:27:43', '2026-02-12 09:19:54'),
+(1, 2, 'Dustin Buck', '12345678945', 'Est maiores corrupti', 'Numquam in sint ape', '785685', '672 New Street', 1, 0, '2026-02-12 07:27:43', '2026-02-12 09:19:54'),
 (2, 2, 'Nithyanandhan K', '7586954852', 'Coimbatore', 'Tamil Nadu', '641002', 'ryuytfdgf', 1, 0, '2026-02-12 09:00:56', '2026-02-12 09:19:54'),
-(3, 2, 'Farrah Cunningham', 'Quo a nemo quisquam', 'Asperiores sit mole', 'Molestias laborum ob', '752989', '78 Rocky Cowley Street', 1, 1, '2026-02-12 09:10:57', '2026-02-12 09:19:54');
+(3, 2, 'Farrah Cunningham', '4589658745', 'Asperiores sit mole', 'Molestias laborum ob', '752989', '78 Rocky Cowley Street', 1, 1, '2026-02-12 09:10:57', '2026-02-12 09:19:54');
 
 --
 -- Indexes for dumped tables
@@ -471,7 +484,7 @@ ALTER TABLE `user_addresses`
 -- AUTO_INCREMENT for table `carts`
 --
 ALTER TABLE `carts`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
 
 --
 -- AUTO_INCREMENT for table `categories`
@@ -507,7 +520,7 @@ ALTER TABLE `migrations`
 -- AUTO_INCREMENT for table `products`
 --
 ALTER TABLE `products`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- AUTO_INCREMENT for table `product_images`

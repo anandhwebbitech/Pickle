@@ -14,15 +14,21 @@
                         <div class="col-md-6">
                             <label class="yp-address-card active">
                                 <input type="radio" name="addr" checked>
-                                <span class="fw-bold d-block mb-1">Home</span>
-                                <small class="text-muted d-block">123 Pickle Lane, Coimbatore, 641001</small>
-                                <small class="fw-bold d-block mt-2">+91 98765 43210</small>
+                                {{-- <span class="fw-bold d-block mb-1">Home</span> --}}
+                                <small class="text-muted d-block">{{ $user_delivery_address->address }}</small>
+                                <small class="text-muted d-block">{{ $user_delivery_address->city }}</small>
+                                <small class="text-muted d-block">{{ $user_delivery_address->state }} - {{ $user_delivery_address->pincode }}</small>
+                                <small class="fw-bold d-block mt-2">{{$user_delivery_address->mobile }}</small>
                             </label>
                         </div>
                     </div>
-                    <button class="btn btn-link text-calor fw-bold text-decoration-none p-0 mt-3 small" data-bs-toggle="modal" data-bs-target="#addAddressModal">
-                        + Add New Address
-                    </button>
+                    {{-- <button class="btn btn-link text-calor fw-bold text-decoration-none p-0 mt-3 small" data-bs-toggle="modal" data-bs-target="#addAddressModal">
+                        + Change Address
+                    </button> --}}
+                    <a href="{{ route('profile') }}"
+                        class="btn btn-link text-calor fw-bold text-decoration-none p-0 mt-3 small">
+                            + Change Address
+                    </a>
                 </div>
 
                 <div class="yp-checkout-section shadow-sm">
@@ -60,19 +66,25 @@
                     <div class="yp-offer-applied">
                         <i class="bi bi-patch-check-fill text-success fs-5"></i>
                         <div class="flex-grow-1">
-                            <div class="yp-offer-text">{{ $coupon['code'] }} Applied</div>
+                            @if(!empty($coupon) && isset($coupon['code']))
+                                <div class="yp-offer-text">{{ $coupon['code'] }} Applied</div>
+                            @endif
                             <small class="text-muted">You saved ₹{{ number_format($discount, 2) }} on this order!</small>
                         </div>
                         <!-- <button class="btn btn-sm text-calor fw-bold p-0" style="font-size: 0.7rem;">REMOVE</button> -->
                     </div>
 
                     <div class="d-flex justify-content-between mb-2">
-                        <span class="text-muted">Subtotal (3 Items)</span>
+                        <span class="text-muted">Subtotal </span>
                         <!-- <span class="fw-bold text-decoration-line-through text-muted small me-2">₹729.00</span> -->
                         <span class="fw-bold">₹{{ number_format($subtotal, 2) }}</span>
                     </div>
                     <div class="d-flex justify-content-between mb-2">
-                        <span class="text-muted">Discount ({{ $coupon['code'] }})</span>
+                        <span class="text-muted">@if(!empty($coupon) && isset($coupon['code']))
+                            Discount ({{ $coupon['code'] }})
+                        @else
+                            Discount
+                        @endif</span>
                         <span class="yp-discount-line">- ₹{{ number_format($discount, 2) }}</span>
                     </div>
                     <div class="d-flex justify-content-between mb-2">

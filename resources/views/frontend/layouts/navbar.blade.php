@@ -104,32 +104,20 @@
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
     </div>
     <div class="offcanvas-body" id="cartBody">
-        <div class="cart-item d-flex align-items-center mb-4 p-3 bg-light rounded-4" data-price="450">
-            <div class="cart-img-container me-3">
-                <img src="asset/img/product/pro-1.webp" alt="Product" class="rounded-3 shadow-sm">
-            </div>
-            <div class="flex-grow-1">
-                <h6 class="mb-0 fw-bold">Forest Honey</h6>
-                <div class="d-flex align-items-center mt-2 gap-3">
-                    <div class="d-flex align-items-center bg-white rounded-pill px-2 border">
-                        <span class="btn-minus p-1" style="cursor:pointer; user-select:none;">-</span>
-                        <span class="qty fw-bold mx-2" style="font-size: 0.9rem;">1</span>
-                        <span class="btn-plus p-1" style="cursor:pointer; user-select:none;">+</span>
-                    </div>
-                    <div class="fw-bold text-calor">₹<span class="item-total">450</span></div>
-                </div>
-            </div>
-            <button class="btn btn-sm text-muted btn-remove ms-2"><i class="bi bi-x-circle-fill fs-5"></i></button>
-        </div>
+        
     </div>
     <div class="p-4 border-top">
         <div class="d-flex justify-content-between mb-4">
             <span class="text-muted">Subtotal Amount</span>
-            <span class="fw-bold fs-4">₹<span id="grandTotal">450</span></span>
+            <span class="fw-bold fs-4">₹<span id="cartGrandTotal">000</span></span>
         </div>
-        <a href="{{route('checkout')}}" class="btn butn-calor w-100 py-3 fw-bold rounded-pill">Proceed to Checkout</a>
+        {{-- <a href="{{route('checkout')}}" class="btn butn-calor w-100 py-3 fw-bold rounded-pill">Proceed to Checkout</a>
         <div class="my-3 text-center">
             <a href="{{route('cart')}}">Go to Cart</a>
-        </div>
+        </div> --}}
+        <a href="{{route('cart')}}" class="btn butn-calor w-100 py-3 fw-bold rounded-pill">Go to Cart</a>
+        {{-- <div class="my-3 text-center">
+            <a href="{{route('cart')}}">Go to Cart</a>
+        </div> --}}
     </div>
 </div>

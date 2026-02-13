@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Cart;
+use App\Models\Category;
 use App\Models\Coupon;
 use App\Models\Product;
 use App\Models\UserAddress;
@@ -42,9 +43,45 @@ class FrontendController extends Controller
     {
         return view('frontend.pages.terms-and-condition');
     }
-    public function Product()
+    public function Shipping_policy()
     {
-        return view('frontend.pages.product-list');
+        return view('frontend.pages.shipping-policy');
+    }
+    public function Product(Request $request)
+    {
+        $query = Product::where('status', 1);
+
+        // ✅ Category Filter
+        if ($request->filled('category')) {
+            $query->where('category_id', $request->category);
+        }
+
+        // // ✅ Sorting (optional)
+        // if ($request->sort == 'low-high') {
+        //     $query->orderBy('price', 'asc');
+        // } elseif ($request->sort == 'high-low') {
+        //     $query->orderBy('price', 'desc');
+        // } else {
+        //     $query->latest();
+        // }
+
+        $products = $query->paginate(15)->withQueryString();
+
+        // ✅ Wishlist Logic (your existing logic preserved)
+        $wishlistIds = [];
+
+        if (auth()->check()) {
+            $userId = auth()->id();
+            $wishlist = session()->get('wishlist_' . $userId, []);
+            $wishlistIds = array_keys($wishlist);
+        }
+
+        $categories = Category::where('status', 1)->get();
+
+        return view(
+            'frontend.pages.product-list',
+            compact('products', 'wishlistIds', 'categories')
+        );
     }
     public function Wishlist()
     {
@@ -70,49 +107,69 @@ class FrontendController extends Controller
         return view('frontend.pages.signup');
     }
     public function Checkout()
-{
-    $userId = Auth::id();
+    {
+        $userId = Auth::id();
 
-    $cartItems = Cart::where('user_id', $userId)->get();
+        $cartItems = Cart::where('user_id', $userId)->get();
 
-    $subtotal = $cartItems->sum(function ($item) {
-        return $item->price * $item->quantity;
-    });
+        $subtotal = $cartItems->sum(function ($item) {
+            return $item->price * $item->quantity;
+        });
 
-    $coupon = session()->get('coupon');
+        $coupon = session()->get('coupon', []);
 
-    $discount = $coupon['discount'] ?? 0;
-    $delivery = 0;
+        $discount = 0;
 
-    if ($discount > $subtotal) {
-        $discount = $subtotal;
+        // ✅ Validate coupon belongs to current user
+        if (!empty($coupon) && isset($coupon['user_id']) && $coupon['user_id'] == $userId) {
+            $discount = $coupon['discount'];
+        } else {
+            // If not matching user → remove it
+            session()->forget('coupon');
+        }
+
+        if ($discount > $subtotal) {
+            $discount = $subtotal;
+        }
+
+        $delivery = 0;
+        $total = $subtotal - $discount + $delivery;
+
+        $user_delivery_address = UserAddress::where('status',1)->where('is_default',1)->first();
+
+        return view('frontend.pages.checkout', compact(
+            'cartItems',
+            'subtotal',
+            'discount',
+            'delivery',
+            'total',
+            'coupon','user_delivery_address'
+        ));
     }
 
-    $total = $subtotal - $discount + $delivery;
-
-    return view('frontend.pages.checkout', compact(
-        'cartItems',
-        'subtotal',
-        'discount',
-        'delivery',
-        'total',
-        'coupon'
-    ));
-}
     public function Profile()
     {
         $user = Auth::user(); // get logged-in user
 
         $addresses = UserAddress::where('user_id', $user->id)
-                    ->where('status', 1)
-                    ->get();
+            ->where('status', 1)
+            ->get();
         return view('frontend.pages.user-dashboard', compact('user', 'addresses'));
     }
     public function ProductDetails($id)
     {
         $product = Product::findOrFail($id);
-        // dd($product);
-        return view('frontend.pages.product-details', compact('product'));
+        $contains = json_decode($product->contains, true); // convert to array
+        $related_products = Product::where('category_id', $product->category_id)->where('id', '!=', $product->id)->limit(4)->get();
+
+        $wishlistIds = [];
+        if (auth()->check()) {
+            $userId = auth()->id();
+            $wishlist = session()->get('wishlist_' . $userId, []);
+            $wishlistIds = array_keys($wishlist);
+        }
+
+        return view('frontend.pages.product-details', compact('product', 'contains', 'related_products', 'wishlistIds'));
     }
 
     public function toggleWishlist($id)
@@ -241,7 +298,7 @@ class FrontendController extends Controller
                         <img src="' . $image . '" class="img-hover">
 
                         <div class="view-overlay">
-                            <a href="#" 
+                            <a href="' . route('product-details', $product->id) . ' "
                                class="btn btn-light rounded-pill btn-sm fw-bold shadow-sm px-3">
                                View Product
                             </a>
@@ -266,6 +323,9 @@ class FrontendController extends Controller
                         ₹' . number_format($oldPrice, 2) . '
                     </small>';
                 }
+                $prices = json_decode($product->weight, true);
+                $firstWeight = $prices[0]['weight'] ?? null;
+                $firstPrice  = $prices[0]['price'] ?? 0;
 
                 $html .= '
                         </div>
@@ -279,7 +339,10 @@ class FrontendController extends Controller
 
                     <button class="btn btn-dark w-100 rounded-pill mt-3 py-2 fw-bold"
                         onclick="handleCartClick(this)"
-                        data-id="' . $product->id . '">
+                        data-id="' . $product->id . '"
+                        data-url="' . route('cart.add', $product->id) . '"
+                        data-weight="' . $firstWeight . '"
+                        data-price= "' . $firstPrice . '">
                         Add to Cart
                     </button>
 
@@ -311,7 +374,7 @@ class FrontendController extends Controller
             ]);
         }
     }
-    public function addToCart(Request $request, $id)
+    public function addToCart11(Request $request, $id)
     {
         $product = Product::find($id);
 
@@ -359,6 +422,66 @@ class FrontendController extends Controller
             'message' => 'Product added to cart successfully'
         ]);
     }
+    public function addToCart(Request $request, $id)
+    {
+        $request->validate([
+            'weight'   => 'required',
+            'price'    => 'required|numeric',
+            'quantity' => 'required|integer|min:1',
+        ]);
+
+        $product = Product::find($id);
+
+        if (!$product) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Product not found'
+            ]);
+        }
+
+        $userId = auth()->id();
+
+        $weight   = $request->weight;
+        $price    = $request->price;
+        $quantity = $request->quantity;
+
+        // Check if same product + same weight already exists
+        $existingCart = Cart::where('user_id', $userId)
+            ->where('product_id', $id)
+            ->where('weight', $weight)
+            ->first();
+
+        if ($existingCart) {
+
+            // Increase quantity
+            $existingCart->quantity += $quantity;
+            $existingCart->price = $price;
+            $existingCart->total_amount = $existingCart->quantity * $price;
+            $existingCart->save();
+        } else {
+
+            Cart::create([
+                'user_id'      => $userId,
+                'product_id'   => $product->id,
+                'category_id'  => $product->category_id ?? null,
+                'quantity'     => $quantity,
+                'weight'       => $weight,
+                'price'        => $price,
+                'discount'     => 0,
+                'total_amount' => $price * $quantity,
+                'status'       => 1
+            ]);
+        }
+
+        // Total quantity count for badge
+        $cartCount = Cart::where('user_id', $userId)->sum('quantity');
+
+        return response()->json([
+            'status'  => true,
+            'count'   => $cartCount,
+            'message' => 'Product added to cart successfully'
+        ]);
+    }
     public function ProductShow($id)
     {
         $product = Product::findOrFail($id);
@@ -367,6 +490,7 @@ class FrontendController extends Controller
 
     public function Cart()
     {
+        session()->forget('coupon');
         return view('frontend.pages.cart');
     }
     public function getCartItems(Request $request)
@@ -479,138 +603,221 @@ class FrontendController extends Controller
 
 
     public function applyDiscount(Request $request)
-{
-    $request->validate([
-        'code' => 'required'
-    ]);
-
-    $code = strtoupper($request->code);
-
-    $userId = Auth::id(); // logged in user
-
-    // ✅ Get cart items from database
-    $cartItems = Cart::where('user_id', $userId)->get();
-
-    if ($cartItems->isEmpty()) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Cart is empty'
+    {
+        $request->validate([
+            'code' => 'required'
         ]);
-    }
 
-    // ✅ Calculate subtotal from DB
-    $subtotal = $cartItems->sum(function ($item) {
-        return $item->price * $item->quantity;
-    });
+        $code = strtoupper($request->code);
 
-    // ✅ Get coupon from DB
-    $coupon = Coupon::where('code', $code)
-                    ->where('status', 1)
-                    ->first();
+        $userId = Auth::id(); // logged in user
 
-    if (!$coupon) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Invalid or expired coupon code'
-        ]);
-    }
+        // ✅ Get cart items from database
+        $cartItems = Cart::where('user_id', $userId)->get();
 
-    $discount = 0;
+        if ($cartItems->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cart is empty'
+            ]);
+        }
 
-    /*
+        // ✅ Calculate subtotal from DB
+        $subtotal = $cartItems->sum(function ($item) {
+            return $item->price * $item->quantity;
+        });
+
+        // ✅ Get coupon from DB
+        $coupon = Coupon::where('code', $code)
+            ->where('status', 1)
+            ->first();
+
+        if (!$coupon) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid or expired coupon code'
+            ]);
+        }
+
+        $discount = 0;
+
+        /*
         type = 0 → Fixed
         type = 1 → Percentage
     */
 
-    if ($coupon->type == 0) {
-        $discount = $coupon->value;
-    } else {
-        $discount = ($subtotal * $coupon->value) / 100;
+        if ($coupon->type == 0) {
+            $discount = $coupon->value;
+        } else {
+            $discount = ($subtotal * $coupon->value) / 100;
+        }
+
+        // Prevent over discount
+        if ($discount > $subtotal) {
+            $discount = $subtotal;
+        }
+
+        $delivery = 0;
+        $total = $subtotal - $discount + $delivery;
+
+        // ✅ Store only coupon in session
+        session()->put('coupon', [
+            'code' => $coupon->code,
+            'discount' => $discount,
+            'user_id' => $userId
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'subtotal' => $subtotal,
+            'discount' => $discount,
+            'total' => $total
+        ]);
+    }
+    public function storeAddress(Request $request)
+    {
+        $request->validate([
+            'full_name' => 'required|string|max:255',
+            'mobile' => 'required',
+            'address_line1' => 'required',
+            'city' => 'required',
+            'state' => 'required',
+            'pincode' => 'required'
+        ]);
+
+        $userId = Auth::id();
+
+        // If default checked → remove old default
+        if ($request->has('is_default')) {
+            UserAddress::where('user_id', $userId)
+                ->update(['is_default' => 0]);
+        }
+
+        $address = UserAddress::create([
+            'user_id' => $userId,
+            'name' => $request->full_name,
+            'mobile' => $request->mobile,
+            'address' => $request->address_line1,
+            'city' => $request->city,
+            'state' => $request->state,
+            'pincode' => $request->pincode,
+            'is_default' => $request->has('is_default') ? 1 : 0,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Address saved successfully'
+        ]);
+    }
+    public function updateAddress(Request $request, $id)
+    {
+        $address = UserAddress::where('id', $id)
+            ->where('user_id', auth()->id())
+            ->firstOrFail();
+
+        // If set as default → remove other defaults
+        if ($request->edit_is_default) {
+            UserAddress::where('user_id', auth()->id())
+                ->update(['is_default' => 0]);
+        }
+
+        $address->update([
+            'name'     => $request->edit_full_name,
+            'mobile'   => $request->edit_mobile,
+            'address'  => $request->edit_address_line1,
+            'city'     => $request->edit_city,
+            'state'    => $request->edit_state,
+            'pincode'  => $request->edit_pincode,
+            'is_default' => $request->edit_is_default ? 1 : 0,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Address updated successfully!'
+        ]);
     }
 
-    // Prevent over discount
-    if ($discount > $subtotal) {
-        $discount = $subtotal;
+    public function navbarCart()
+    {
+        if (!auth()->check()) {
+            return response()->json([
+                'status' => true,
+                'html' => '<div class="text-center py-4">Please login 🛒</div>',
+                'total' => 0
+            ]);
+        }
+
+        $cartItems = Cart::with('product')
+            ->where('user_id', auth()->id())
+            ->get();
+
+        $html = '';
+        $grandTotal = 0;
+
+        foreach ($cartItems as $item) {
+
+            if (!$item->product) continue;
+
+            $product = $item->product;
+
+            $qty    = $item->quantity;
+            $price  = $item->price;
+            $weight = $item->weight;
+
+            $itemTotal = $qty * $price;
+            $grandTotal += $itemTotal;
+
+            $image = $product->image
+                ? asset('public/uploads/products/' . $product->image)
+                : asset('assets/img/product/default.webp');
+
+            $html .= '
+        <div class="cart-item d-flex align-items-center mb-4 p-3 bg-light rounded-4"
+             data-id="' . $item->id . '"
+             data-price="' . $price . '">
+
+            <div class="cart-img-container me-3">
+                <img src="' . $image . '" class="rounded-3 shadow-sm" width="60">
+            </div>
+
+            <div class="flex-grow-1">
+                <h6 class="mb-0 fw-bold">' . e($product->name) . '</h6>
+                <small class="text-muted">' . $weight . 'g</small>
+
+                <div class="d-flex align-items-center mt-2 gap-3">
+
+                    <div class="d-flex align-items-center bg-white rounded-pill px-2 border">
+                        <span class="btn-minus p-1"
+                              onclick="updateQtyNav(this,' . $item->id . ', -1)">-</span>
+
+                        <span class="qty fw-bold mx-2 yp-qty-num">' . $qty . '</span>
+
+                        <span class="btn-plus p-1"
+                              onclick="updateQtyNav(this,' . $item->id . ', 1)">+</span>
+                    </div>
+
+                    <div class="fw-bold text-calor">
+                        ₹<span class="item-total">' . number_format($itemTotal, 2) . '</span>
+                    </div>
+
+                </div>
+            </div>
+
+            <button class="btn btn-sm text-muted btn-remove nav-cart-remove ms-2" data-id="' . $item->id . '"
+                    >
+                <i class="bi bi-x-circle-fill fs-5"></i>
+            </button>
+        </div>';
+        }
+
+        if ($cartItems->isEmpty()) {
+            $html = '<div class="text-center py-4">Cart is empty 🛒</div>';
+        }
+
+        return response()->json([
+            'status' => true,
+            'html'   => $html,
+            'total'  => number_format($grandTotal, 2)
+        ]);
     }
-
-    $delivery = 0;
-    $total = $subtotal - $discount + $delivery;
-
-    // ✅ Store only coupon in session
-    session()->put('coupon', [
-        'code' => $coupon->code,
-        'discount' => $discount
-    ]);
-
-    return response()->json([
-        'success' => true,
-        'subtotal' => $subtotal,
-        'discount' => $discount,
-        'total' => $total
-    ]);
-}
-public function storeAddress(Request $request)
-{
-    $request->validate([
-        'full_name' => 'required|string|max:255',
-        'mobile' => 'required',
-        'address_line1' => 'required',
-        'city' => 'required',
-        'state' => 'required',
-        'pincode' => 'required'
-    ]);
-
-    $userId = Auth::id();
-
-    // If default checked → remove old default
-    if ($request->has('is_default')) {
-        UserAddress::where('user_id', $userId)
-            ->update(['is_default' => 0]);
-    }
-
-    $address = UserAddress::create([
-        'user_id' => $userId,
-        'name' => $request->full_name,
-        'mobile' => $request->mobile,
-        'address' => $request->address_line1,
-        'city' => $request->city,
-        'state' => $request->state,
-        'pincode' => $request->pincode,
-        'is_default' => $request->has('is_default') ? 1 : 0,
-    ]);
-
-    return response()->json([
-        'success' => true,
-        'message' => 'Address saved successfully'
-    ]);
-}
-public function updateAddress(Request $request, $id)
-{
-    $address = UserAddress::where('id', $id)
-                ->where('user_id', auth()->id())
-                ->firstOrFail();
-
-    // If set as default → remove other defaults
-    if ($request->edit_is_default) {
-        UserAddress::where('user_id', auth()->id())
-            ->update(['is_default' => 0]);
-    }
-
-    $address->update([
-        'name'     => $request->edit_full_name,
-        'mobile'   => $request->edit_mobile,
-        'address'  => $request->edit_address_line1,
-        'city'     => $request->edit_city,
-        'state'    => $request->edit_state,
-        'pincode'  => $request->edit_pincode,
-        'is_default' => $request->edit_is_default ? 1 : 0,
-    ]);
- 
-    return response()->json([
-        'success' => true,
-        'message' => 'Address updated successfully!'
-    ]);
-}
-
-
 }

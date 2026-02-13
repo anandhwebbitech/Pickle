@@ -9,7 +9,7 @@
                     style="width: 60px; height: 60px;">
                     <i class="bi bi-person-circle fs-2"></i>
                 </div>
-                <h6 class="fw-bold mb-3 border-bottom pb-3" id="side-name">John Doe</h6>
+                <h6 class="fw-bold mb-3 border-bottom pb-3" id="side-name">{{ $user->name ?? 'John Doe' }}</h6>
 
                 <nav class="text-start">
                     <a class="yp-nav-link active" onclick="switchTab('profile', this)"><i class="bi bi-person"></i>

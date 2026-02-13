@@ -79,8 +79,8 @@
                 <div class="yp-summary-title">Order Summary</div>
 
                 <div class="yp-summary-line subtotal">
-                    <span class="text-muted">Subtotal</span>
-                    <span>₹609.00</span>
+                    <p class="text-muted">Subtotal</p>
+                    <span>₹00.00</span>
                 </div>
                 <div class="yp-summary-line delivery">
                     <p class="text-muted">Standard Delivery</p>
@@ -130,6 +130,8 @@ $(document).ready(function() {
     };
 
     loadCart();
+    loadNavbarCart();
+
 });
 $(document).ready(function() {
     loadCart();

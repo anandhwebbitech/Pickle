@@ -6,7 +6,7 @@
                 <div class="col-12 text-center">
                     <nav aria-label="breadcrumb">
                         <ol class="breadcrumb justify-content-center mb-2">
-                            <li class="breadcrumb-item"><a href="index.php" class="text-muted text-decoration-none small">Home</a></li>
+                            <li class="breadcrumb-item"><a href="{{route('home')}}" class="text-muted text-decoration-none small">Home</a></li>
                             <!-- <li class="breadcrumb-item"><a href="#" class="text-muted text-decoration-none small">Shop</a></li> -->
                             <li class="breadcrumb-item active small text-calor fw-bold" aria-current="page">About</li>
                         </ol>

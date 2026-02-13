@@ -22,4 +22,4 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
 
 <!-- Custom CSS -->
-<link rel="stylesheet" href="asset/css/style.css">
+<link rel="stylesheet" href="{{ asset('asset/css/style.css') }}">

@@ -142,12 +142,12 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 
-function updateQty(btn, val) {
-  const display = btn.parentElement.querySelector(".local-qty");
-  let count = parseInt(display.innerText) + val;
-  if (count < 1) count = 1;
-  display.innerText = count;
-}
+// function updateQty(btn, val) {
+//   const display = btn.parentElement.querySelector(".local-qty");
+//   let count = parseInt(display.innerText) + val;
+//   if (count < 1) count = 1;
+//   display.innerText = count;
+// }
 
 // function toggleSave(btn) {
 
@@ -296,21 +296,30 @@ const swiperMain = new Swiper(".main-swiper", {
 });
 
 // 2. Quantity Logic
-function updateQty(n) {
-  let q = parseInt(document.getElementById("qty-count").innerText);
-  q += n;
-  if (q < 1) q = 1;
-  document.getElementById("qty-count").innerText = q;
+function updateQty(btn, change) {
+
+    // Find closest qty wrapper
+    let wrapper = btn.closest('.qty-pill');
+
+    // Find quantity inside that wrapper
+    let qtyElement = wrapper.querySelector('.local-qty');
+
+    let qty = parseInt(qtyElement.innerText);
+    qty += change;
+
+    if (qty < 1) qty = 1;
+
+    qtyElement.innerText = qty;
 }
 
 // 3. Price Toggle
-function changePrice(btn, price) {
-  document
-    .querySelectorAll(".gram-btn")
-    .forEach((b) => b.classList.remove("active"));
-  btn.classList.add("active");
-  document.getElementById("price-target").innerText = price.toFixed(2);
-}
+// function changePrice(btn, price) {
+//   document
+//     .querySelectorAll(".gram-btn")
+//     .forEach((b) => b.classList.remove("active"));
+//   btn.classList.add("active");
+//   document.getElementById("price-target").innerText = price.toFixed(2);
+// }
 
 // 4. Wishlist Toggle (REFINED)
 function toggleWishlist(btn) {
@@ -358,60 +367,114 @@ function handlePayment() {
     alert("Order Placed via COD!");
   }
 }
+// function handleCartClick(btn) {
+
+//     let url = btn.getAttribute("data-url");
+
+//     fetch(url, {
+//         method: "POST",
+//         headers: {
+//             "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+//             "Accept": "application/json"
+//         },
+//         credentials: "same-origin"
+//     })
+//     .then(res => res.json())
+//     .then(data => {
+
+//         if (data.status) {
+
+//             // ✅ Update cart badge
+//             let badge = document.querySelector(".cart-link .badge");
+//             if (badge) {
+//                 badge.innerText = data.count;
+//             }
+
+//             // ✅ Button animation
+//             const originalText = btn.innerHTML;
+
+//             btn.innerHTML = `<i class="bi bi-check-circle me-2"></i>Added`;
+//             btn.classList.remove("btn-dark");
+//             btn.classList.add("btn-success");
+
+//             setTimeout(() => {
+//                 btn.innerHTML = originalText;
+//                 btn.classList.remove("btn-success");
+//                 btn.classList.add("btn-dark");
+//             }, 2000);
+
+//         } else {
+
+//             Swal.fire({
+//                 icon: 'error',
+//                 title: 'Oops!',
+//                 text: data.message
+//             });
+
+//         }
+
+//     })
+//     .catch(err => {
+//         console.log(err);
+//         Swal.fire({
+//             icon: 'error',
+//             title: 'Server Error',
+//             text: 'Something went wrong!'
+//         });
+//     });
+// }
 function handleCartClick(btn) {
 
-    let url = btn.getAttribute("data-url");
+    let productId = btn.dataset.id;
+    let url = btn.dataset.url;
+
+    let weight = btn.dataset.weight;
+    let price = btn.dataset.price;
+
+    // Get quantity
+    let qty = btn.closest('.card, .product-card')
+                 ?.querySelector('.local-qty')?.innerText || 1;
 
     fetch(url, {
         method: "POST",
         headers: {
-            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
+            "Content-Type": "application/json",
             "Accept": "application/json"
         },
-        credentials: "same-origin"
+        body: JSON.stringify({
+            product_id: productId,
+            weight: weight,
+            price: price,
+            quantity: qty
+        })
     })
     .then(res => res.json())
     .then(data => {
 
         if (data.status) {
 
-            // ✅ Update cart badge
             let badge = document.querySelector(".cart-link .badge");
-            if (badge) {
-                badge.innerText = data.count;
-            }
+            if (badge) badge.innerText = data.count;
 
-            // ✅ Button animation
-            const originalText = btn.innerHTML;
-
-            btn.innerHTML = `<i class="bi bi-check-circle me-2"></i>Added`;
+            btn.innerHTML = "Added ✓";
             btn.classList.remove("btn-dark");
             btn.classList.add("btn-success");
 
             setTimeout(() => {
-                btn.innerHTML = originalText;
+                btn.innerHTML = "Add to Cart";
                 btn.classList.remove("btn-success");
                 btn.classList.add("btn-dark");
             }, 2000);
 
         } else {
-
-            Swal.fire({
-                icon: 'error',
-                title: 'Oops!',
-                text: data.message
-            });
-
+            alert(data.message || "Something went wrong");
         }
 
     })
-    .catch(err => {
-        console.log(err);
-        Swal.fire({
-            icon: 'error',
-            title: 'Server Error',
-            text: 'Something went wrong!'
-        });
+    .catch(error => {
+        console.error(error);
+        alert("Server error");
     });
 }
 

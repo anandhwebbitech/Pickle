@@ -8,7 +8,7 @@
                 <p class="text-muted mb-0">Items you've saved for later.</p>
             </div>
             <div class="col-md-6 text-md-end mt-3 mt-md-0">
-                <a href="product-list.php" class="btn btn-outline-dark rounded-pill fw-bold px-4">
+                <a href="{{route('product')}}" class="btn btn-outline-dark rounded-pill fw-bold px-4">
                     Continue Shopping
                 </a>
             </div>

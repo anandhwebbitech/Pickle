@@ -27,7 +27,7 @@
                         <a href="{{ route('contact') }}" class="footer-link"><i class="bi bi-chevron-right small" style="color:white;"></i> Contact Us</a>
                         <a href="{{route('terms')}}" class="footer-link"><i class="bi bi-chevron-right small" style="color:white;"></i> Terms & Conditions</a>
                         <a href="{{route('private_Policy')}}" class="footer-link"><i class="bi bi-chevron-right small" style="color:white;"></i> Privacy Policy</a>
-                        <a href="shipping-delivery.php" class="footer-link"><i class="bi bi-chevron-right small" style="color:white;"></i> Shipping & Delivery</a>
+                        <a href="{{route('shipping_policy')}}" class="footer-link"><i class="bi bi-chevron-right small" style="color:white;"></i> Shipping & Delivery</a>
                     </div>
                 </div>
 
@@ -76,3 +76,81 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 <script src="asset/js/script.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        loadNavbarCart();
+    });
+    function loadNavbarCart() {
+
+    fetch("{{ route('cart.navbar') }}")
+        .then(res => res.json())
+        .then(data => {
+
+            if (data.status) {
+
+                // Update cart items
+                const cartBody = document.getElementById("cartBody");
+                if (cartBody) {
+                    cartBody.innerHTML = data.html;
+                }
+
+                // Update subtotal
+                const totalElement = document.getElementById("cartGrandTotal");
+                if (totalElement) {
+                    totalElement.innerText = data.total;
+                }
+            }
+
+        })
+        .catch(err => {
+            console.error("Navbar Cart Error:", err);
+        });
+}
+function updateQtyNav(el, cartId, change) {
+
+    fetch("{{ route('cart.update', ':id') }}".replace(':id', cartId), {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRF-TOKEN": "{{ csrf_token() }}",
+            "Accept": "application/json"
+        },
+        body: JSON.stringify({
+            change: change
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+
+        if (data.status) {
+            loadNavbarCart(); // reload full cart from backend
+        }
+
+    })
+    .catch(err => console.error(err));
+}
+$(document).on('click', '.nav-cart-remove', function () {
+
+    let id = $(this).data('id');
+
+    $.ajax({
+        url: "{{ route('cart.remove', ':id') }}".replace(':id', id),
+        method: "POST",
+        data: {
+            _token: "{{ csrf_token() }}"
+        },
+        success: function (res) {
+            if (res.status) {
+                loadNavbarCart();
+            }
+        },
+        error: function (err) {
+            console.log(err);
+        }
+    });
+
+});
+
+</script>
