@@ -3,7 +3,7 @@
 #sidebar {
     width: 260px;
     min-height: 100vh;
-    background: #f6efe6;
+    background: #5e0e3cb8;
     border-radius: 18px;
     margin: 16px;
     padding: 14px 0;
@@ -23,8 +23,9 @@
 }
 
 .sidebar-logo {
-    height: 30px;
+    height: 65px;
     transition: 0.3s;
+    width: 100px;
 }
 
 /* ===== TOGGLE BUTTON ===== */
@@ -118,7 +119,7 @@
 
     <!-- HEADER -->
     <div class="sidebar-header">
-        <img src="{{ asset('assets/images/new-images/logo.png') }}"
+        <img src="{{ asset('asset/img/anni-logo.png') }}"
              class="sidebar-logo"
              alt="Logo">
 

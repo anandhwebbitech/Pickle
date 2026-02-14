@@ -133,7 +133,7 @@
                     <span class="badge-label">100% Pure</span>
                     <h4 class="fw-bold mt-2">Wood Pressed <br>Nutrient Rich Oils used Pickle</h4>
                     <p class="small text-muted mb-3">Traditional extraction for authentic health.</p>
-                    <a href="product-list.php" class="btn-yummy-outline-sm">Explore More</a>
+                    <a href="{{ route('product') }}" class="btn-yummy-outline-sm">Explore More</a>
                 </div>
                 <img src="asset/img/product/garlic-pro.png" class="bento-asset-bottom" alt="Oils">
             </div>
@@ -143,7 +143,7 @@
                     <span class="badge-label">Wild Harvest</span>
                     <h4 class="fw-bold mt-2">Raw Forest <br>Organic Garlic</h4>
                     <p class="small text-muted mb-3">Unprocessed Pickle</p>
-                    <a href="product-list.php" class="btn-yummy-outline-sm">Explore More</a>
+                    <a href="{{ route('product') }}" class="btn-yummy-outline-sm">Explore More</a>
                 </div>
                 <img src="asset/img/product/garlic-pro.png" class="bento-asset-bottom" alt="Honey">
             </div>
@@ -155,7 +155,7 @@
                     <span class="badge-label bg-white text-calor">Bestseller</span>
                     <h2 class="display-5 fw-bold mt-3 mb-3">Traditional <br>Homemade Pickles</h2>
                     <p class="mb-4 opacity-90 mx-auto" style="max-width: 80%;">Experience the spicy, tangy, and authentic taste of South Indian heritage in every jar.</p>
-                    <a href="product-list.php" class="btn btn-light rounded-pill px-5 py-2 fw-bold text-calor shadow-sm">
+                    <a href="{{ route('product') }}" class="btn btn-light rounded-pill px-5 py-2 fw-bold text-calor shadow-sm">
                         Shop All Pickles
                     </a>
                 </div>

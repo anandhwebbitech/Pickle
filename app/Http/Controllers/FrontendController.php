@@ -5,10 +5,16 @@ namespace App\Http\Controllers;
 use App\Models\Cart;
 use App\Models\Category;
 use App\Models\Coupon;
+use App\Models\Order;
+use App\Models\PaymentDetail;
 use App\Models\Product;
 use App\Models\UserAddress;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Razorpay\Api\Api;
+use Illuminate\Support\Facades\DB;
+use Razorpay\Api\Errors\SignatureVerificationError;
+use Yajra\DataTables\Facades\DataTables;
 
 
 
@@ -135,7 +141,7 @@ class FrontendController extends Controller
         $delivery = 0;
         $total = $subtotal - $discount + $delivery;
 
-        $user_delivery_address = UserAddress::where('status',1)->where('is_default',1)->first();
+        $user_delivery_address = UserAddress::where('status', 1)->where('is_default', 1)->first();
 
         return view('frontend.pages.checkout', compact(
             'cartItems',
@@ -143,7 +149,8 @@ class FrontendController extends Controller
             'discount',
             'delivery',
             'total',
-            'coupon','user_delivery_address'
+            'coupon',
+            'user_delivery_address'
         ));
     }
 
@@ -424,6 +431,15 @@ class FrontendController extends Controller
     }
     public function addToCart(Request $request, $id)
     {
+        // Check login manually
+        if (!auth()->check()) {
+            return response()->json([
+                'status' => false,
+                'redirect' => route('login'),
+                'message' => 'Please login first'
+            ]);
+        }
+
         $request->validate([
             'weight'   => 'required',
             'price'    => 'required|numeric',
@@ -750,6 +766,7 @@ class FrontendController extends Controller
         $cartItems = Cart::with('product')
             ->where('user_id', auth()->id())
             ->get();
+        $cartItemsCount = Cart::with('product')->where('user_id', auth()->id())->count();
 
         $html = '';
         $grandTotal = 0;
@@ -786,7 +803,7 @@ class FrontendController extends Controller
 
                 <div class="d-flex align-items-center mt-2 gap-3">
 
-                    <div class="d-flex align-items-center bg-white rounded-pill px-2 border">
+                    <div class="d-flex align-items-center bg-white rounded-pill px-2 border"style="cursor: pointer;">
                         <span class="btn-minus p-1"
                               onclick="updateQtyNav(this,' . $item->id . ', -1)">-</span>
 
@@ -817,7 +834,318 @@ class FrontendController extends Controller
         return response()->json([
             'status' => true,
             'html'   => $html,
-            'total'  => number_format($grandTotal, 2)
+            'total'  => number_format($grandTotal, 2),
+            'cartcount' => $cartItemsCount
+        ]);
+    }
+
+    public function placeCodOrder(Request $request)
+    {
+        try {
+            $userId = auth()->id();
+
+            $cartItems = Cart::where('user_id', $userId)->get();
+
+            if ($cartItems->isEmpty()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Cart is empty'
+                ]);
+            }
+
+            // Get extra details from AJAX
+            $addressId  = $request->address_id;
+            $couponCode = $request->coupon_code ?? 0;
+            $subtotal   = $request->subtotal ?? 0;
+            $discount   = $request->discount ?? 0;
+            $total      = $request->total ?? 0;
+
+            // You could store one row per cart item or create a single order with multiple items
+            foreach ($cartItems as $item) {
+
+                Order::create([
+                    'product_id'   => $item->product_id,
+                    'cart_id'      => $item->id,
+                    'user_id'      => $userId,
+                    'address_id'   => $addressId,      // store delivery address
+                    'price'        => $item->price,
+                    'discount'     => $item->discount ?? 0,
+                    'coupon_code'  => $couponCode,
+                    'total'        => $item->total_amount,
+                    'payment_type' => 2, // 2 = COD
+                    'status'       => 1, // 1 = pending
+                    'order_date'   => now(),
+                    'delivery_date' => now()->addDays(7),
+                ]);
+            }
+
+            // Clear cart after order
+            Cart::where('user_id', $userId)->delete();
+
+            return response()->json([
+                'status'   => true,
+                'redirect' => route('product') // you can redirect to order confirmation page
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+    public function createRazorpayOrder(Request $request)
+    {
+        try {
+
+            $userId = auth()->id();
+
+            if (!$userId) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'User not authenticated'
+                ]);
+            }
+
+            $cartItems = Cart::where('user_id', $userId)->get();
+
+            if ($cartItems->isEmpty()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Cart is empty'
+                ]);
+            }
+
+            DB::beginTransaction();
+
+            $createdOrders = [];
+
+            foreach ($cartItems as $item) {
+
+                $order = Order::create([
+                    'user_id'       => $userId,
+                    'address_id'    => $request->address_id,
+                    'product_id'    => $item->product_id,
+                    'cart_id'      => $item->id,
+                    'price'         => $item->price,
+                    'discount'      => $request->discount ?? 0,
+                    'coupon_code'   => $request->coupon_code ?? 0,
+                    'total'         => $item->total_amount,
+                    'payment_type'  => 1, // Razorpay
+                    'status'        => 0,
+                    'order_date'    => now(),
+                    'delivery_date' => now()->addDays(7),
+                ]);
+
+                Cart::where('user_id', $userId)->where('id', $item->id)->delete();
+                $createdOrders[] = $order->id;
+            }
+
+            // Create Razorpay order using total amount
+            $api = new Api(
+                config('services.razorpay.key'),
+                config('services.razorpay.secret')
+            );
+            $rOrder = $api->order->create([
+                'receipt'  => 'order_group_' . time(),
+                'amount'   => $request->total * 100,
+                'currency' => 'INR'
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'status'            => true,
+                'key'               => config('services.razorpay.key'),
+                'amount'            => $rOrder['amount'],
+                'razorpay_order_id' => $rOrder['id'],
+                'order_ids'         => $createdOrders
+            ]);
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+
+            return response()->json([
+                'status'  => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+    public function verifyRazorpayPayment() {}
+
+    public function savePayment(Request $request)
+    {
+        // dd($request->all());
+        DB::beginTransaction();
+
+        try {
+
+            $orderIds = $request->order_ids;
+
+            // Convert JSON string to array
+            if (is_string($orderIds)) {
+                $decoded = json_decode($orderIds, true);
+                $orderIds = $decoded ?? [$orderIds];
+            }
+
+            // If single value, convert to array
+            if (!is_array($orderIds)) {
+                $orderIds = [$orderIds];
+            }
+
+            if (empty($orderIds)) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Invalid order IDs'
+                ]);
+            }
+
+            $api = new Api(
+                config('services.razorpay.key'),
+                config('services.razorpay.secret')
+            );
+
+            $attributes = [
+                'razorpay_order_id'   => $request->razorpay_order_id,
+                'razorpay_payment_id' => $request->razorpay_payment_id,
+                'razorpay_signature'  => $request->razorpay_signature,
+            ];
+
+            $api->utility->verifyPaymentSignature($attributes);
+
+            // ✅ Update all orders
+            Order::whereIn('id', $orderIds)->update([
+                'status' => 1
+            ]);
+
+            // ✅ Create payment row for EACH order
+            // foreach ($orderIds as $orderId) {
+            // dd($orderIds);
+            PaymentDetail::create([
+                'order_id'          =>  json_encode($orderIds), // Always integer
+                'payment_id'        => $request->razorpay_payment_id,
+                'razorpay_order_id' => $request->razorpay_order_id,
+                'signature'         => $request->razorpay_signature,
+                'amount'            => $request->amount ? $request->amount / 100 : 0,
+                'payment_method'    => 'Razorpay',
+                'payment_status'    => 1,
+                'status'            => 1
+            ]);
+            // }
+
+            Cart::where('user_id', auth()->id())->delete();
+
+            DB::commit();
+
+            return response()->json([
+                'status'   => 'success',
+                'redirect' => route('home')
+            ]);
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+
+            return response()->json([
+                'status'  => 'error',
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+
+    public function userOrdersDatatable(Request $request)
+    {
+        $orders = Order::with('product')->where('user_id', auth()->id())
+            ->latest();
+
+        return DataTables::of($orders)
+            ->addIndexColumn()
+            ->addColumn('order_number', function ($row) {
+                return '#OR-' . $row->id;
+            })
+            ->addColumn('productname', function ($row) {
+                return $row->product->name ?? '-';
+            })
+
+            ->addColumn('date', function ($row) {
+                return $row->created_at->format('M d, Y');
+            })
+
+            ->addColumn('amount', function ($row) {
+                return '₹' . number_format($row->total, 2);
+            })
+
+            ->addColumn('status', function ($row) {
+
+                if ($row->status == 2) {
+                    return '<span class="badge bg-success">Delivered</span>';
+                } elseif ($row->status == 0 ) {
+                    return '<span class="badge bg-warning">Pending</span>';
+                } elseif ($row->status == 1 ) {
+                    return '<span class="badge bg-info">Order Confirm</span>';
+                } elseif ($row->status == 4 ) {
+                    return '<span class="badge bg-danger">Returned</span>';
+                } else {
+                    return '<span class="badge bg-danger">Cancelled</span>';
+                }
+            })
+            // ✅ NEW ACTION COLUMN
+            ->addColumn('action', function ($row) {
+
+                // View Button
+                $viewBtn = '<a href="' . route('product-details', $row->product_id) . '" 
+                                class="btn btn-sm btn-primary rounded-circle d-inline-flex align-items-center justify-content-center me-1" style="width:28px; height:28px; padding:0;">
+                                <i class="bi bi-eye "style="font-size:10px;"></i>
+                            </a>';
+
+                $cancelBtn = '';
+                $returnBtn = '';
+
+                // Show Cancel only if Pending
+                if ($row->status == 1) {
+                    $cancelBtn = '<button class="btn btn-sm btn-danger rounded-circle d-inline-flex align-items-center justify-content-center me-1 cancel-order" 
+                                        data-id="' . $row->id . '" style="width:28px; height:28px; padding:0;">
+                                        <i class="bi bi-x-circle "style="font-size:10px;"></i>
+                                </button>';
+                }
+
+                // Show Return only if Delivered
+                if ($row->status == 2) {
+                    $returnBtn = '<button class="btn btn-sm btn-warning rounded-circle d-inline-flex align-items-center justify-content-center return-order" 
+                                        data-id="' . $row->id . '" style="width:28px; height:28px; padding:0;">
+                                        <i class="bi bi-arrow-counterclockwise "style="font-size:10px;"></i>
+                                </button>';
+                }
+
+                return $viewBtn . $cancelBtn . $returnBtn;
+            })
+
+            ->rawColumns(['status', 'action'])
+            ->make(true);
+    }
+    public function cancelOrder($id)
+    {
+        $order = Order::where('id', $id)
+            ->where('user_id', auth()->id())
+            ->firstOrFail();
+
+        $order->status = 3; // cancelled
+        $order->save();
+
+        return response()->json([
+            'message' => 'Your order has been cancelled successfully.'
+        ]);
+    }
+
+    public function returnOrder($id)
+    {
+        $order = Order::where('id', $id)
+            ->where('user_id', auth()->id())
+            ->firstOrFail();
+
+        $order->status = 4; // returned
+        $order->save();
+
+        return response()->json([
+            'message' => 'Return request submitted successfully.'
         ]);
     }
 }

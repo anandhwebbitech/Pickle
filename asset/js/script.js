@@ -187,47 +187,47 @@ document.addEventListener("DOMContentLoaded", function () {
 // }
 function toggleSave(btn) {
 
-    let productId = btn.getAttribute("data-id");
+  let productId = btn.getAttribute("data-id");
 
-    fetch("toggle-wishlist/" + productId, {
-        method: "POST",
-        headers: {
-            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-        },
-        credentials: "same-origin"
-    })
+  fetch("toggle-wishlist/" + productId, {
+    method: "POST",
+    headers: {
+      "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+      "Content-Type": "application/json",
+      "Accept": "application/json"
+    },
+    credentials: "same-origin"
+  })
     .then(res => res.json())
     .then(data => {
 
-        const icon = btn.querySelector("i");
+      const icon = btn.querySelector("i");
 
-        if (data.added) {
+      if (data.added) {
 
-            // Added to wishlist
-            btn.classList.add("active");
-            icon.classList.remove("bi-heart");
-            icon.classList.add("bi-heart-fill", "text-danger");
+        // Added to wishlist
+        btn.classList.add("active");
+        icon.classList.remove("bi-heart");
+        icon.classList.add("bi-heart-fill", "text-danger");
 
-        } else {
+      } else {
 
-            // Removed from wishlist
-            btn.classList.remove("active");
-            icon.classList.remove("bi-heart-fill", "text-danger");
-            icon.classList.add("bi-heart");
+        // Removed from wishlist
+        btn.classList.remove("active");
+        icon.classList.remove("bi-heart-fill", "text-danger");
+        icon.classList.add("bi-heart");
 
-            // 🔥 Reload wishlist page items
-            if (document.getElementById("wishlist-container")) {
-                loadWishlist();
-            }
+        // 🔥 Reload wishlist page items
+        if (document.getElementById("wishlist-container")) {
+          loadWishlist();
         }
+      }
 
-        // Update badge count
-        let badge = document.querySelector(".wishlist-link .badge");
-        if (badge) {
-            badge.innerText = data.count;
-        }
+      // Update badge count
+      let badge = document.querySelector(".wishlist-link .badge");
+      if (badge) {
+        badge.innerText = data.count;
+      }
 
     })
     .catch(err => console.log(err));
@@ -298,18 +298,18 @@ const swiperMain = new Swiper(".main-swiper", {
 // 2. Quantity Logic
 function updateQty(btn, change) {
 
-    // Find closest qty wrapper
-    let wrapper = btn.closest('.qty-pill');
+  // Find closest qty wrapper
+  let wrapper = btn.closest('.qty-pill');
 
-    // Find quantity inside that wrapper
-    let qtyElement = wrapper.querySelector('.local-qty');
+  // Find quantity inside that wrapper
+  let qtyElement = wrapper.querySelector('.local-qty');
 
-    let qty = parseInt(qtyElement.innerText);
-    qty += change;
+  let qty = parseInt(qtyElement.innerText);
+  qty += change;
 
-    if (qty < 1) qty = 1;
+  if (qty < 1) qty = 1;
 
-    qtyElement.innerText = qty;
+  qtyElement.innerText = qty;
 }
 
 // 3. Price Toggle
@@ -359,13 +359,54 @@ function copyToClip() {
 }
 
 // checkout
-function handlePayment() {
-  const isRazorpay = document.getElementById("razorpay").checked;
-  if (isRazorpay) {
-    alert("Opening Razorpay Gateway...");
-  } else {
-    alert("Order Placed via COD!");
-  }
+function handlePayments() {
+    const isRazorpay = document.getElementById("razorpay").checked;
+
+    if (isRazorpay) {
+        alert("Opening Razorpay Gateway...");
+        return;
+    }
+
+    Swal.fire({
+        title: "Confirm Order?",
+        text: "Are you sure you want to place this order with Cash on Delivery?",
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonColor: "#198754",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Yes, Place Order"
+    }).then((result) => {
+        if (result.isConfirmed) {
+
+            fetch(codOrderUrl, {
+                method: "POST",
+                headers: {
+                    "X-CSRF-TOKEN": csrfToken,
+                    "Content-Type": "application/json"
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status) {
+                    Swal.fire({
+                        icon: "success",
+                        title: "Order Placed!",
+                        text: "Your order has been placed successfully.",
+                        confirmButtonColor: "#198754"
+                    }).then(() => {
+                        window.location.href = data.redirect;
+                    });
+                } else {
+                    Swal.fire("Error", data.message, "error");
+                }
+            })
+            .catch(err => {
+                Swal.fire("Error", "Server error occurred.", "error");
+                console.error(err);
+            });
+
+        }
+    });
 }
 // function handleCartClick(btn) {
 
@@ -425,56 +466,60 @@ function handlePayment() {
 // }
 function handleCartClick(btn) {
 
-    let productId = btn.dataset.id;
-    let url = btn.dataset.url;
+  let productId = btn.dataset.id;
+  let url = btn.dataset.url;
 
-    let weight = btn.dataset.weight;
-    let price = btn.dataset.price;
+  let weight = btn.dataset.weight;
+  let price = btn.dataset.price;
 
-    // Get quantity
-    let qty = btn.closest('.card, .product-card')
-                 ?.querySelector('.local-qty')?.innerText || 1;
+  // Get quantity
+  let qty = btn.closest('.card, .product-card')
+    ?.querySelector('.local-qty')?.innerText || 1;
 
-    fetch(url, {
-        method: "POST",
-        headers: {
-            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-        },
-        body: JSON.stringify({
-            product_id: productId,
-            weight: weight,
-            price: price,
-            quantity: qty
-        })
+  fetch(url, {
+    method: "POST",
+    headers: {
+      "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
+      "Content-Type": "application/json",
+      "Accept": "application/json"
+    },
+    body: JSON.stringify({
+      product_id: productId,
+      weight: weight,
+      price: price,
+      quantity: qty
     })
+  })
     .then(res => res.json())
     .then(data => {
+      // 🔥 If login required → redirect
+      if (data.redirect) {
+        window.location.href = data.redirect;
+        return;
+      }
+      if (data.status) {
 
-        if (data.status) {
+        let badge = document.querySelector(".cart-link .badge");
+        if (badge) badge.innerText = data.count;
+          loadNavbarCart();
+        btn.innerHTML = "Added ✓";
+        btn.classList.remove("btn-dark");
+        btn.classList.add("btn-success");
 
-            let badge = document.querySelector(".cart-link .badge");
-            if (badge) badge.innerText = data.count;
+        setTimeout(() => {
+          btn.innerHTML = "Add to Cart";
+          btn.classList.remove("btn-success");
+          btn.classList.add("btn-dark");
+        }, 2000);
 
-            btn.innerHTML = "Added ✓";
-            btn.classList.remove("btn-dark");
-            btn.classList.add("btn-success");
-
-            setTimeout(() => {
-                btn.innerHTML = "Add to Cart";
-                btn.classList.remove("btn-success");
-                btn.classList.add("btn-dark");
-            }, 2000);
-
-        } else {
-            alert(data.message || "Something went wrong");
-        }
+      } else {
+        alert(data.message || "Something went wrong");
+      }
 
     })
     .catch(error => {
-        console.error(error);
-        alert("Server error");
+      console.error(error);
+      alert("Server error");
     });
 }
 

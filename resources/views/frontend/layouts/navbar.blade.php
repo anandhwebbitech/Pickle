@@ -67,7 +67,7 @@
 
                 <button class="action-icon" type="button" data-bs-toggle="offcanvas" data-bs-target="#cartSide">
                     <i class="bi bi-bag"></i>
-                    <span class="badge-dot cart-count">1</span>
+                     <span class="badge-dot cart-count" id="cart-count">0</span>
                 </button>
             </div>
         </div>

@@ -101,6 +101,11 @@
                 if (totalElement) {
                     totalElement.innerText = data.total;
                 }
+                const totalCount = document.getElementById("cart-count");
+                if (totalCount) {
+                    totalCount.innerText = data.cartcount;
+                }
+
             }
 
         })
@@ -123,13 +128,14 @@ function updateQtyNav(el, cartId, change) {
     })
     .then(res => res.json())
     .then(data => {
-
+        console.log(data.status);
         if (data.status) {
             loadNavbarCart(); // reload full cart from backend
         }
 
     })
     .catch(err => console.error(err));
+    loadNavbarCart(); 
 }
 $(document).on('click', '.nav-cart-remove', function () {
 
@@ -145,10 +151,12 @@ $(document).on('click', '.nav-cart-remove', function () {
             if (res.status) {
                 loadNavbarCart();
             }
+            loadNavbarCart();
         },
         error: function (err) {
             console.log(err);
         }
+        
     });
 
 });

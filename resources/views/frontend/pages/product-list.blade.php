@@ -138,10 +138,17 @@
                                         <span class="qty-btn" onclick="updateQty(this, 1)">+</span>
                                     </div>
                                 </div>
+                                @php
+                                    $prices = json_decode($product->weight, true);
+                                    $firstWeight = $prices[0]['weight'] ?? null;
+                                    $firstPrice  = $prices[0]['price'] ?? 0;
+                                @endphp
 
                                 <button class="btn btn-dark w-100 rounded-pill mt-3 py-2 fw-bold"
                                     onclick="handleCartClick(this)"
-                                    data-id="{{ $product->id }}"data-url="{{ route('cart.add', $product->id) }}">
+                                    data-id="{{ $product->id }}"data-url="{{ route('cart.add', $product->id) }}"
+                                    data-weight="{{ $firstWeight }}"
+                                    data-price="{{ $firstPrice }}">
                                     Add to Cart
                                 </button>
 

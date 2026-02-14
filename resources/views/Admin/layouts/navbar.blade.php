@@ -1,7 +1,7 @@
 <style>
 /* ===== NAVBAR ===== */
 .navbar-custom {
-    background: #f6efe6;
+    background: #5e0e3cb8;
     border-radius: 18px;
     padding: 10px 14px;
     box-shadow: 0 8px 20px rgba(0,0,0,0.06);
