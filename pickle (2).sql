@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Feb 13, 2026 at 01:12 PM
+-- Generation Time: Feb 14, 2026 at 01:40 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -71,7 +71,8 @@ CREATE TABLE `carts` (
 --
 
 INSERT INTO `carts` (`id`, `product_id`, `category_id`, `user_id`, `quantity`, `weight`, `price`, `discount`, `total_amount`, `status`, `created_at`, `updated_at`) VALUES
-(23, 3, 1, 2, 4, '100', 100, 0, 400, 1, '2026-02-13 07:35:39', '2026-02-13 10:47:05');
+(36, 8, 1, 2, 1, '100', 100, 0, 100, 1, '2026-02-14 09:36:23', '2026-02-14 09:36:23'),
+(37, 9, 1, 2, 1, '100', 100, 0, 100, 1, '2026-02-14 09:36:26', '2026-02-14 09:36:26');
 
 -- --------------------------------------------------------
 
@@ -197,6 +198,64 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `orders`
+--
+
+CREATE TABLE `orders` (
+  `id` int(11) NOT NULL,
+  `product_id` int(11) NOT NULL,
+  `cart_id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `price` int(11) NOT NULL,
+  `discount` int(11) NOT NULL,
+  `coupon_code` varchar(255) NOT NULL,
+  `total` int(11) NOT NULL,
+  `payment_type` int(11) NOT NULL,
+  `status` int(11) NOT NULL DEFAULT 1,
+  `address_id` int(11) NOT NULL,
+  `order_date` datetime NOT NULL,
+  `delivery_date` datetime DEFAULT NULL,
+  `created_at` datetime NOT NULL,
+  `updated_at` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `orders`
+--
+
+INSERT INTO `orders` (`id`, `product_id`, `cart_id`, `user_id`, `price`, `discount`, `coupon_code`, `total`, `payment_type`, `status`, `address_id`, `order_date`, `delivery_date`, `created_at`, `updated_at`) VALUES
+(1, 4, 1, 2, 100, 0, '0', 200, 1, 0, 3, '2026-02-14 07:18:09', '2026-02-21 07:18:09', '2026-02-14 07:18:09', '2026-02-14 07:18:09'),
+(2, 4, 2, 2, 100, 0, '0', 100, 1, 0, 3, '2026-02-14 07:26:13', '2026-02-21 07:26:13', '2026-02-14 07:26:13', '2026-02-14 07:26:13'),
+(3, 4, 3, 2, 100, 0, '0', 100, 1, 0, 3, '2026-02-14 07:27:10', '2026-02-21 07:27:10', '2026-02-14 07:27:10', '2026-02-14 07:27:10'),
+(4, 4, 4, 2, 100, 0, '0', 100, 1, 0, 3, '2026-02-14 07:30:15', '2026-02-21 07:30:15', '2026-02-14 07:30:15', '2026-02-14 07:30:15'),
+(5, 4, 5, 2, 100, 0, '0', 100, 1, 0, 3, '2026-02-14 07:34:41', '2026-02-21 07:34:41', '2026-02-14 07:34:41', '2026-02-14 07:34:41'),
+(6, 4, 6, 2, 100, 0, '0', 100, 1, 0, 3, '2026-02-14 07:36:38', '2026-02-21 07:36:38', '2026-02-14 07:36:38', '2026-02-14 07:36:38'),
+(7, 5, 7, 2, 100, 0, '0', 100, 1, 0, 3, '2026-02-14 07:39:41', '2026-02-21 07:39:41', '2026-02-14 07:39:41', '2026-02-14 07:39:41'),
+(8, 7, 8, 2, 100, 0, '0', 100, 1, 0, 3, '2026-02-14 07:42:21', '2026-02-21 07:42:21', '2026-02-14 07:42:21', '2026-02-14 07:42:21'),
+(9, 5, 9, 2, 100, 0, '0', 100, 1, 0, 3, '2026-02-14 07:46:11', '2026-02-21 07:46:11', '2026-02-14 07:46:11', '2026-02-14 07:46:11'),
+(10, 4, 10, 2, 100, 0, '0', 100, 1, 1, 3, '2026-02-14 07:48:29', '2026-02-21 07:48:29', '2026-02-14 07:48:29', '2026-02-14 07:48:51'),
+(11, 2, 11, 2, 100, 0, '0', 100, 1, 1, 3, '2026-02-14 08:53:27', '2026-02-21 08:53:27', '2026-02-14 08:53:27', '2026-02-14 08:53:49'),
+(12, 3, 12, 2, 100, 0, '0', 100, 1, 1, 3, '2026-02-14 08:53:27', '2026-02-21 08:53:27', '2026-02-14 08:53:27', '2026-02-14 08:53:49'),
+(13, 4, 13, 2, 100, 0, '0', 300, 1, 1, 3, '2026-02-14 08:53:27', '2026-02-21 08:53:27', '2026-02-14 08:53:27', '2026-02-14 08:53:49'),
+(14, 4, 14, 2, 100, 0, '0', 100, 1, 0, 3, '2026-02-14 08:55:49', '2026-02-21 08:55:49', '2026-02-14 08:55:49', '2026-02-14 08:55:49'),
+(15, 3, 15, 2, 100, 0, '0', 100, 1, 0, 3, '2026-02-14 09:05:26', '2026-02-21 09:05:26', '2026-02-14 09:05:26', '2026-02-14 09:05:26'),
+(16, 5, 16, 2, 100, 0, '0', 100, 1, 0, 3, '2026-02-14 09:05:26', '2026-02-21 09:05:26', '2026-02-14 09:05:26', '2026-02-14 09:05:26'),
+(17, 4, 17, 2, 100, 0, '0', 100, 1, 0, 3, '2026-02-14 09:06:22', '2026-02-21 09:06:22', '2026-02-14 09:06:22', '2026-02-14 09:06:22'),
+(18, 2, 18, 2, 100, 0, '0', 100, 1, 0, 3, '2026-02-14 09:06:22', '2026-02-21 09:06:22', '2026-02-14 09:06:22', '2026-02-14 09:06:22'),
+(19, 6, 19, 2, 100, 0, '0', 100, 1, 0, 3, '2026-02-14 09:06:22', '2026-02-21 09:06:22', '2026-02-14 09:06:22', '2026-02-14 09:06:22'),
+(20, 4, 20, 2, 100, 0, '0', 100, 1, 0, 3, '2026-02-14 09:09:39', '2026-02-21 09:09:39', '2026-02-14 09:09:39', '2026-02-14 09:09:39'),
+(21, 7, 21, 2, 100, 0, '0', 200, 1, 0, 3, '2026-02-14 09:09:39', '2026-02-21 09:09:39', '2026-02-14 09:09:39', '2026-02-14 09:09:39'),
+(22, 4, 22, 2, 100, 0, '0', 100, 1, 0, 3, '2026-02-14 09:13:30', '2026-02-21 09:13:30', '2026-02-14 09:13:30', '2026-02-14 09:13:30'),
+(23, 5, 23, 2, 100, 0, '0', 100, 1, 0, 3, '2026-02-14 09:13:30', '2026-02-21 09:13:30', '2026-02-14 09:13:30', '2026-02-14 09:13:30'),
+(24, 7, 24, 2, 100, 0, '0', 100, 1, 0, 3, '2026-02-14 09:13:30', '2026-02-21 09:13:30', '2026-02-14 09:13:30', '2026-02-14 09:13:30'),
+(25, 4, 25, 2, 100, 0, '0', 100, 1, 3, 3, '2026-02-14 09:14:43', '2026-02-21 09:14:43', '2026-02-14 09:14:43', '2026-02-14 10:39:48'),
+(26, 5, 26, 2, 100, 0, '0', 200, 1, 1, 3, '2026-02-14 09:14:43', '2026-02-21 09:14:43', '2026-02-14 09:14:43', '2026-02-14 09:15:04'),
+(27, 6, 27, 2, 100, 0, '0', 100, 1, 1, 3, '2026-02-14 09:14:43', '2026-02-21 09:14:43', '2026-02-14 09:14:43', '2026-02-14 09:15:04'),
+(28, 5, 28, 2, 100, 0, '0', 100, 1, 1, 3, '2026-02-14 09:15:43', '2026-02-21 09:15:43', '2026-02-14 09:15:43', '2026-02-14 09:16:04');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `password_reset_tokens`
 --
 
@@ -205,6 +264,38 @@ CREATE TABLE `password_reset_tokens` (
   `token` varchar(255) NOT NULL,
   `created_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `payment_details`
+--
+
+CREATE TABLE `payment_details` (
+  `id` int(11) NOT NULL,
+  `order_id` varchar(255) NOT NULL,
+  `payment_id` varchar(255) NOT NULL,
+  `razorpay_order_id` varchar(255) NOT NULL,
+  `signature` varchar(255) NOT NULL,
+  `payment_method` varchar(255) NOT NULL,
+  `amount` int(11) NOT NULL,
+  `payment_status` varchar(255) NOT NULL,
+  `status` int(11) NOT NULL DEFAULT 1,
+  `created_at` datetime NOT NULL,
+  `updated_at` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `payment_details`
+--
+
+INSERT INTO `payment_details` (`id`, `order_id`, `payment_id`, `razorpay_order_id`, `signature`, `payment_method`, `amount`, `payment_status`, `status`, `created_at`, `updated_at`) VALUES
+(1, '10', 'pay_SFwtE1vOkkzVdo', 'order_SFwt8P5bygBuCq', '6c30d7a0a8fd73c4d94c32e5cdbc42ad01f1c79af4f1884db73989d30f40e423', 'Razorpay', 0, '1', 1, '2026-02-14 07:48:51', '2026-02-14 07:48:51'),
+(2, '11', 'pay_SFxzqirLVX16XM', 'order_SFxzji5LMC0Hhv', 'ffca007a179aa7f5f79c26ebd27d2c20017043443abf3de87c242eb4407c022f', 'Razorpay', 0, '1', 1, '2026-02-14 08:53:49', '2026-02-14 08:53:49'),
+(3, '12', 'pay_SFxzqirLVX16XM', 'order_SFxzji5LMC0Hhv', 'ffca007a179aa7f5f79c26ebd27d2c20017043443abf3de87c242eb4407c022f', 'Razorpay', 0, '1', 1, '2026-02-14 08:53:49', '2026-02-14 08:53:49'),
+(4, '13', 'pay_SFxzqirLVX16XM', 'order_SFxzji5LMC0Hhv', 'ffca007a179aa7f5f79c26ebd27d2c20017043443abf3de87c242eb4407c022f', 'Razorpay', 0, '1', 1, '2026-02-14 08:53:49', '2026-02-14 08:53:49'),
+(5, '[25,26,27]', 'pay_SFyMITGjEyTDDw', 'order_SFyMDKGf7h1wXv', '92c0c2548c4dbc66b4bd5d44c2c5d6c5b75d4e32aeb1cf5882f82082950691fb', 'Razorpay', 400, '1', 1, '2026-02-14 09:15:04', '2026-02-14 09:15:04'),
+(6, '[28]', 'pay_SFyNKyBDPNweaz', 'order_SFyNGMYvlrddSq', 'f6f58eb52739b95c03198a2dedeb494b4731ae03c614b02c83854eb32dfef278', 'Razorpay', 100, '1', 1, '2026-02-14 09:16:04', '2026-02-14 09:16:04');
 
 -- --------------------------------------------------------
 
@@ -304,8 +395,7 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
-('EEwLGBEIEcRlBzNiJeiro4INbwpvLrAabDQSxcbE', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiR1NidFQydXJaaWFGY09IRnJrcGhwdTM0cXpuY3JmM3p0bjNFWG90bCI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6NDE6Imh0dHA6Ly9sb2NhbGhvc3QvcGlja2xlL3Byb2R1Y3QtZGV0YWlscy8yIjtzOjU6InJvdXRlIjtzOjE1OiJwcm9kdWN0LWRldGFpbHMiO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX19', 1770979074),
-('O4tkywxGHpuDbOp61d2dHqKCZZQwzuwgd5VDqawI', 2, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'YTo1OntzOjY6Il90b2tlbiI7czo0MDoibWVQclBTRWp4dmkwemtnNFBLcTN0TTkwbmN0REZURWRDcHpjQTlwQSI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6MzU6Imh0dHA6Ly9sb2NhbGhvc3QvcGlja2xlL2NhcnQvbmF2YmFyIjtzOjU6InJvdXRlIjtzOjExOiJjYXJ0Lm5hdmJhciI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fXM6NTA6ImxvZ2luX3dlYl81OWJhMzZhZGRjMmIyZjk0MDE1ODBmMDE0YzdmNThlYTRlMzA5ODlkIjtpOjI7czoxMDoid2lzaGxpc3RfMiI7YTo0OntpOjExO2E6NTp7czoyOiJpZCI7aToxMTtzOjEyOiJwcm9kdWN0X25hbWUiO3M6MTI6Ik1hbmdvIFBpY2tsZSI7czo1OiJwcmljZSI7TjtzOjg6InF1YW50aXR5IjtpOjE7czoxMToicHJvZHVjdF9pbWciO3M6MTU6IjE3NzA3OTIxODgud2VicCI7fWk6MjthOjU6e3M6MjoiaWQiO2k6MjtzOjEyOiJwcm9kdWN0X25hbWUiO3M6MTc6IkN1cnJ5IExlYWYgUG93ZGVyIjtzOjU6InByaWNlIjtOO3M6ODoicXVhbnRpdHkiO2k6MTtzOjExOiJwcm9kdWN0X2ltZyI7czoxNToiMTc3MDc5MTk3OC53ZWJwIjt9aTo1O2E6NTp7czoyOiJpZCI7aTo1O3M6MTI6InByb2R1Y3RfbmFtZSI7czoxNzoiQ3VycnkgTGVhZiBQb3dkZXIiO3M6NToicHJpY2UiO047czo4OiJxdWFudGl0eSI7aToxO3M6MTE6InByb2R1Y3RfaW1nIjtzOjE1OiIxNzcwNzkxOTc4LndlYnAiO31pOjM7YTo1OntzOjI6ImlkIjtpOjM7czoxMjoicHJvZHVjdF9uYW1lIjtzOjEyOiJNYW5nbyBQaWNrbGUiO3M6NToicHJpY2UiO047czo4OiJxdWFudGl0eSI7aToxO3M6MTE6InByb2R1Y3RfaW1nIjtzOjE1OiIxNzcwNzkyMTg4LndlYnAiO319fQ==', 1770984558);
+('c1hczZZPGJrdL3FYBgcnPsMufayYyQyEtEO5CM5Q', 2, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiNEk5NUZ6bHNqYWtnMVBMNGt3YWxFYWpOVTdlSDRhMTltdVR1ckN2SSI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6MzU6Imh0dHA6Ly9sb2NhbGhvc3QvcGlja2xlL2FkbWluLWxvZ2luIjtzOjU6InJvdXRlIjtzOjEwOiJhZG1pbmxvZ2luIjt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6Mjt9', 1771072745);
 
 -- --------------------------------------------------------
 
@@ -332,7 +422,7 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `name`, `email`, `phone`, `status`, `otp`, `email_verified_at`, `password`, `remember_token`, `created_at`, `updated_at`) VALUES
-(1, 'Admin', 'adminpickle@gmail.com', '9994394717', '1', NULL, NULL, '$2y$12$RdL1FyIq5/za3Wei4quWKu2xhlFyPWHhkAzTUJoWFHfStTmlQhPQm', NULL, '2026-02-11 05:04:08', '2026-02-11 05:04:08'),
+(1, 'Admin', 'adminpickle@gmail.com', '9994394717', '1', NULL, NULL, '$2y$12$htUsrXlpIzQTDbLNMHnRwOvHWPNNPV5fl55G24xvk1k...', NULL, '2026-02-11 05:04:08', '2026-02-11 05:04:08'),
 (2, 'Anandh', 'anandhwebbitech@gmail.com', '9994394718', '1', NULL, NULL, '$2y$12$htUsrXlpIzQTDbLNMHnRwOvHWPNNPV5fl55G24xvk1kDKp3Sluv.O', NULL, '2026-02-10 23:50:05', '2026-02-12 05:26:17'),
 (3, 'Nithyanandhan K', 'anandwebbitech@gmail.com', '9994394719', '1', NULL, NULL, '$2y$12$vgEqWxeBlIYxUUYJXyRanOJcI5O27d1zo49SRuMGMAAVDr8vZumz.', NULL, '2026-02-10 23:56:56', '2026-02-10 23:56:56'),
 (4, 'Prabu', 'prabuwebbitech@gmail.com', '9994394720', '1', NULL, NULL, '$2y$12$0r5ZGYEySEF/VHS3zA.iDeAodOe97YgnQUAu/RIECcF3jc2TKnRfy', NULL, '2026-02-11 00:00:29', '2026-02-11 00:00:29');
@@ -431,10 +521,22 @@ ALTER TABLE `migrations`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `orders`
+--
+ALTER TABLE `orders`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `password_reset_tokens`
 --
 ALTER TABLE `password_reset_tokens`
   ADD PRIMARY KEY (`email`);
+
+--
+-- Indexes for table `payment_details`
+--
+ALTER TABLE `payment_details`
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indexes for table `products`
@@ -484,7 +586,7 @@ ALTER TABLE `user_addresses`
 -- AUTO_INCREMENT for table `carts`
 --
 ALTER TABLE `carts`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=39;
 
 --
 -- AUTO_INCREMENT for table `categories`
@@ -515,6 +617,18 @@ ALTER TABLE `jobs`
 --
 ALTER TABLE `migrations`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT for table `orders`
+--
+ALTER TABLE `orders`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
+
+--
+-- AUTO_INCREMENT for table `payment_details`
+--
+ALTER TABLE `payment_details`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `products`
