@@ -82,6 +82,10 @@
                     <p class="text-muted">Subtotal</p>
                     <span>₹00.00</span>
                 </div>
+                <div class="yp-summary-line gst">
+                    <p class="text-muted">GST (18 %)</p>
+                    <span class="text-success fw-bold">18 %</span>
+                </div>
                 <div class="yp-summary-line delivery">
                     <p class="text-muted">Standard Delivery</p>
                     <span class="text-success fw-bold">FREE</span>
@@ -124,6 +128,7 @@ $(document).ready(function() {
                 $('.yp-summary-line.subtotal span').text('₹' + res.subtotal.toFixed(2));
                 $('.yp-summary-line.delivery span').text(res.delivery === 0 ? 'FREE' : '₹' + res
                     .delivery.toFixed(2));
+                $('.yp-summary-line.gst span').text('₹' + res.gst_total.toFixed(2));
                 $('.yp-summary-line.total span').text('₹' + res.total.toFixed(2));
             }
         });

@@ -129,6 +129,8 @@
                         <th>Coupon Code</th>
                         <th>Type</th>
                         <th>value</th>
+                        <th>Expiry Date</th>
+                        <th>Limit</th>
                         <th width="120">Status</th>
                         <th width="140">Action</th>
                     </tr>
@@ -187,6 +189,23 @@
                             class="form-control"
                             placeholder="Enter value"
                             required>
+                    </div>
+                    <!-- Usage Limit -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Usage Limit</label>
+                        <input type="number"
+                            name="limit"
+                            class="form-control"
+                            placeholder="How many times can be used?"
+                            min="1">
+                    </div>
+
+                    <!-- Expiry Date -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Expiry Date</label>
+                        <input type="date"
+                            name="expiry_date"
+                            class="form-control">
                     </div>
 
                     <!-- Status -->
@@ -267,6 +286,25 @@
                                class="form-control"
                                required>
                     </div>
+                    <!-- Usage Limit -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Usage Limit</label>
+                        <input type="number"
+                            name="limit"
+                            id="edit_limit"
+                            class="form-control"
+                            placeholder="How many times can be used?"
+                            min="1">
+                    </div>
+
+                    <!-- Expiry Date -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Expiry Date</label>
+                        <input type="date"
+                            name="expiry_date"
+                            id="edit_expiry_date"
+                            class="form-control">
+                    </div>
 
                     <!-- Status -->
                     <div class="col-md-6 mb-3">
@@ -302,13 +340,41 @@
 
 @push('scripts')
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-
 <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
-
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
-   $('#couponForm').on('submit', function (e) {
+let table;
+
+$(document).ready(function () {
+
+    // ================= DATATABLE LOAD =================
+    table = $('#categoryTable').DataTable({
+        processing: true,
+        ajax: "{{ route('coupons.datatable') }}",
+        columns: [
+            { data: 'id', width: '60px' },
+            { data: 'code' },
+            { data: 'type' },
+            { data: 'value' },
+            { data: 'expiry_date' },
+            { data: 'use_limit' },
+            { data: 'status', orderable: false, searchable: false },
+            { data: 'action', orderable: false, searchable: false }
+        ],
+        order: [[0, 'desc']],
+        responsive: true,
+        language: {
+            emptyTable: "No coupons available"
+        }
+    });
+
+});
+
+
+// ================= ADD COUPON =================
+$('#couponForm').on('submit', function (e) {
     e.preventDefault();
 
     $.ajax({
@@ -323,6 +389,7 @@
             });
         },
         success: function (response) {
+
             Swal.fire({
                 icon: 'success',
                 title: 'Success!',
@@ -334,16 +401,12 @@
             $('#addCouponModal').modal('hide');
             $('#couponForm')[0].reset();
 
-            // OPTIONAL: refresh coupon table
-            if (typeof fetchCoupons === 'function') {
-                fetchCoupons();
-            }
+            table.ajax.reload(null, false); // reload table
         },
         error: function (xhr) {
-            let errors = xhr.responseJSON.errors;
-            let errorMsg = '';
 
-            $.each(errors, function (key, value) {
+            let errorMsg = '';
+            $.each(xhr.responseJSON.errors, function (key, value) {
                 errorMsg += value[0] + '<br>';
             });
 
@@ -355,27 +418,9 @@
         }
     });
 });
-$(document).ready(function () {
 
-    $('#categoryTable').DataTable({
-        processing: true,
-        ajax: "{{ route('coupons.datatable') }}",
-        columns: [
-            { data: 'id', width: '60px' },
-            { data: 'code' },
-            { data: 'type' },
-            { data: 'value' },
-            { data: 'status', orderable: false, searchable: false },
-            { data: 'action', orderable: false, searchable: false }
-        ],
-        order: [[0, 'desc']],
-        responsive: true,
-        language: {
-            emptyTable: "No coupons available"
-        }
-    });
 
-});
+// ================= EDIT LOAD =================
 $(document).on('click', '.editBtn', function () {
     const id = $(this).data('id');
 
@@ -388,10 +433,19 @@ $(document).on('click', '.editBtn', function () {
         $('#edit_type').val(data.type == 1 ? 'percentage' : 'amount');
         $('#edit_value').val(data.value);
         $('#edit_status').val(data.status);
-
+        $('#edit_limit').val(data.use_limit);
+        // $('#edit_expiry_date').val(data.expiry_date);
+        if (data.expiry_date) {
+            let date = new Date(data.expiry_date);
+            let formattedDate = date.toISOString().split('T')[0];
+            $('#edit_expiry_date').val(formattedDate);
+        }
         $('#editCouponModal').modal('show');
     });
 });
+
+
+// ================= UPDATE =================
 $('#editCouponForm').on('submit', function (e) {
     e.preventDefault();
 
@@ -402,7 +456,7 @@ $('#editCouponForm').on('submit', function (e) {
 
     $.ajax({
         url: url,
-        type: 'POST', // still POST, method spoofing handles PUT
+        type: 'POST',
         data: $(this).serialize(),
         beforeSend: function () {
             Swal.fire({
@@ -412,6 +466,7 @@ $('#editCouponForm').on('submit', function (e) {
             });
         },
         success: function (res) {
+
             Swal.fire({
                 icon: 'success',
                 title: 'Updated!',
@@ -421,9 +476,11 @@ $('#editCouponForm').on('submit', function (e) {
             });
 
             $('#editCouponModal').modal('hide');
-            $('#categoryTable').DataTable().ajax.reload();
+
+            table.ajax.reload(null, false); // reload table
         },
         error: function (xhr) {
+
             let msg = '';
             $.each(xhr.responseJSON.errors, function (k, v) {
                 msg += v[0] + '<br>';
@@ -438,8 +495,10 @@ $('#editCouponForm').on('submit', function (e) {
     });
 });
 
+
 // ================= DELETE =================
 $(document).on('click', '.deleteBtn', function () {
+
     const id = $(this).data('id');
 
     let url = "{{ route('coupons.destroy', ':id') }}";
@@ -453,7 +512,9 @@ $(document).on('click', '.deleteBtn', function () {
         confirmButtonColor: '#d33',
         confirmButtonText: 'Yes, delete it'
     }).then((result) => {
+
         if (result.isConfirmed) {
+
             $.ajax({
                 url: url,
                 type: 'POST',
@@ -462,8 +523,16 @@ $(document).on('click', '.deleteBtn', function () {
                     _method: 'DELETE'
                 },
                 success: function (res) {
-                    Swal.fire('Deleted!', res.message, 'success');
-                    $('#categoryTable').DataTable().ajax.reload();
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Deleted!',
+                        text: res.message,
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+
+                    table.ajax.reload(null, false); // reload table
                 }
             });
         }

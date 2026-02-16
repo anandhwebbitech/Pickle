@@ -84,6 +84,11 @@
                         <span class="fw-bold">₹{{ number_format($subtotal, 2) }}</span>
                     </div>
                     <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">GST (18 %) </span>
+                        <!-- <span class="fw-bold text-decoration-line-through text-muted small me-2">₹729.00</span> -->
+                        <span class="fw-bold">₹{{ number_format($gst_total, 2) }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
                         <span class="text-muted">@if(!empty($coupon) && isset($coupon['code']))
                             Discount ({{ $coupon['code'] }})
                         @else

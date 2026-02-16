@@ -19,6 +19,9 @@
 .dataTables_wrapper .dataTables_paginate {
     padding-top: 10px;
 }
+#ordersTable th.no-center {
+    text-align: left; /* or default */
+}
 </style>
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
@@ -63,9 +66,9 @@
                     <div id="tab-profile" class="tab-content">
                         <div class="d-flex justify-content-between align-items-center mb-4">
                             <h4 class="fw-bold mb-0">Personal Information</h4>
-                            <a href="#" class="btn btn-dark  rounded-pill py-2 fw-bold text-decoration-none shadow-sm">
+                            {{-- <a href="#" class="btn btn-dark  rounded-pill py-2 fw-bold text-decoration-none shadow-sm">
                                 Track Your Order
-                            </a>
+                            </a> --}}
                             <button class="yp-btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#profileModal">Edit
                                 Profile</button>
 
@@ -125,7 +128,7 @@
                                         <th>Order Date</th>
                                         <th>Price</th>
                                         <th>Status</th>
-                                        <th >Action</th>
+                                        <th class="no-center" >Action</th>
                                     </tr>
                                 </thead>
                             </table>
@@ -519,9 +522,8 @@
                             targets: 1, // Date column
                             className: 'text-nowrap'
                         },
-                        
                         {
-                            targets: '_all',
+                            targets: [0,1,2,3,4,5], // all except last column (Action)
                             className: 'text-center'
                         }
                     ]

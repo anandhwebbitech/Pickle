@@ -33,6 +33,8 @@ function calculateGrand() {
   document.getElementById("grandTotal").innerText = sum;
   document.querySelector(".cart-count").innerText = totals.length;
   if (totals.length === 0) {
+   document.querySelector(".cart-count").innerText = 0;
+
     document.getElementById("cartBody").innerHTML =
       "<div class='text-center mt-5 text-muted'><i class='bi bi-cart-x fs-1 d-block mb-3'></i>Cart is empty</div>";
   }

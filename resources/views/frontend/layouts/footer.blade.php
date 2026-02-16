@@ -95,7 +95,6 @@
                 if (cartBody) {
                     cartBody.innerHTML = data.html;
                 }
-
                 // Update subtotal
                 const totalElement = document.getElementById("cartGrandTotal");
                 if (totalElement) {
@@ -104,6 +103,9 @@
                 const totalCount = document.getElementById("cart-count");
                 if (totalCount) {
                     totalCount.innerText = data.cartcount;
+                }
+                else{
+                    totalCount.innerText =0
                 }
 
             }

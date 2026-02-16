@@ -222,50 +222,76 @@
                 <h2>Welcome Back</h2>
                 <div class="error-msg" id="errorMsg"></div>
                 <input type="email" name="email" placeholder="Email Address" required>
-                <input type="password" name="password" placeholder="Password" required>
+                <input type="password" name="password" id="passwordInput"
+                        class="form-control" placeholder="••••••••" required style="padding-right: 45px;">
+                    <i class="bi bi-eye password-toggle-icon" id="togglePassword"></i>
                 <button type="submit">Proceed to My Account</button>
-                <a href="#">Forgot Password?</a>
+                {{-- <a href="#">Forgot Password?</a> --}}
             </form>
         </div>
     </div>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
-        $(document).ready(function () {
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+        e.preventDefault();
 
-            // Setup CSRF token for all AJAX requests
-            $.ajaxSetup({
+        let formData = new FormData(this);
+        let button = this.querySelector("button[type='submit']");
+
+        // Show loading
+        button.disabled = true;
+        button.innerHTML = "Please wait...";
+
+        fetch("{{ route('login.submit') }}", {
+                method: "POST",
                 headers: {
-                    'X-CSRF-TOKEN': $('input[name="_token"]').val()
+                    "X-CSRF-TOKEN": document.querySelector('input[name="_token"]').value
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+
+                button.disabled = false;
+                button.innerHTML = "SIGN IN";
+
+                if (data.status === true) {
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: data.message,
+                        timer: 1500,
+                        showConfirmButton: false
+                    }).then(() => {
+                        window.location.href = data.redirect;
+                    });
+
+                } else {
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Login Failed',
+                        text: data.message
+                    });
+
                 }
-            });
+            })
+            .catch(error => {
 
-            $('#loginForm').on('submit', function (e) {
-                e.preventDefault();
+                button.disabled = false;
+                button.innerHTML = "SIGN IN";
 
-                // Clear previous error
-                $('#errorMsg').fadeOut();
-
-                $.ajax({
-                    url: "{{ route('login.submit') }}",
-                    type: 'POST',
-                    data: $(this).serialize(),
-                    success: function (res) {
-                        if (res.status === true) { // check true/false, not 'success'
-                            window.location.href = res.redirect;
-                        } else {
-                            $('#errorMsg').text(res.message).fadeIn();
-                        }
-                    },
-                    error: function (xhr) {
-                        if (xhr.status === 419) {
-                            $('#errorMsg').text('CSRF token mismatch. Please refresh the page.').fadeIn();
-                        } else {
-                            $('#errorMsg').text('Server error, try again later.').fadeIn();
-                        }
-                    }
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: 'Something went wrong!'
                 });
+
+                console.error(error);
             });
-        });
+    });
     </script>
 </body>
 

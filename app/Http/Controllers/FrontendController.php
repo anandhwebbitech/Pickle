@@ -137,9 +137,15 @@ class FrontendController extends Controller
         if ($discount > $subtotal) {
             $discount = $subtotal;
         }
+        $gst_rate = 18; // GST %
+        $gst_total = ($subtotal * $gst_rate) / 100; // GST on subtotal
+        $cgst = $gst_total / 2; // CGST 9%
+        $sgst = $gst_total / 2; // SGST 9%
 
         $delivery = 0;
-        $total = $subtotal - $discount + $delivery;
+        $total = $subtotal + $gst_total - $discount + $delivery ;
+
+        // $total = $subtotal - $discount + $delivery;
 
         $user_delivery_address = UserAddress::where('status', 1)->where('is_default', 1)->first();
 
@@ -148,6 +154,7 @@ class FrontendController extends Controller
             'subtotal',
             'discount',
             'delivery',
+            'gst_total',
             'total',
             'coupon',
             'user_delivery_address'
@@ -552,13 +559,22 @@ class FrontendController extends Controller
                 </div>
             </div>';
         }
+        $gst_rate = 18; // GST %
+        $gst_total = ($subtotal * $gst_rate) / 100; // GST on subtotal
+        $cgst = $gst_total / 2; // CGST 9%
+        $sgst = $gst_total / 2; // SGST 9%
 
+        $delivery = 0;
+        $total = $subtotal + $gst_total + $delivery;
         // return response()->json(['html' => $html]);
         return response()->json([
             'html' => $html,
             'subtotal' => $subtotal,
-            'delivery' => 0, // you can calculate delivery if needed
-            'total' => $subtotal // can apply discounts later
+            'cgst' => $cgst,
+            'sgst' => $sgst,
+            'gst_total' => $gst_total,
+            'delivery' => $delivery, // you can calculate delivery if needed
+            'total' => $total // can apply discounts later
         ]);
     }
     public function removeCartItem($id)
@@ -654,6 +670,37 @@ class FrontendController extends Controller
                 'message' => 'Invalid or expired coupon code'
             ]);
         }
+        // Check expiry date
+        if ($coupon->expiry_date && now()->greaterThan($coupon->expiry_date)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This coupon has expired'
+            ]);
+        }
+        // Check use limit
+        // Count how many times this user has already used this coupon
+        $userUseCount = Order::where('user_id', $userId)
+            ->where('coupon_code', $coupon->code)
+            ->count();
+
+        // Compare with use_limit
+        if ($coupon->use_limit && $userUseCount >= 1) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You have already used this coupon the maximum number of times'
+            ]);
+        }
+        $userUseCount = Order::where('coupon_code', $coupon->code)
+            ->count();
+
+        // Compare with use_limit
+        if ($coupon->use_limit && $userUseCount >= $coupon->use_limit) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Coupon Reched Use Limit'
+            ]);
+        }
+
 
         $discount = 0;
 
@@ -674,7 +721,9 @@ class FrontendController extends Controller
         }
 
         $delivery = 0;
-        $total = $subtotal - $discount + $delivery;
+        $gst_rate = 18;
+        $gst_total = ($subtotal * $gst_rate) / 100;
+        $total = $subtotal + $gst_total - $discount + $delivery;    
 
         // ✅ Store only coupon in session
         session()->put('coupon', [
@@ -767,7 +816,7 @@ class FrontendController extends Controller
             ->where('user_id', auth()->id())
             ->get();
         $cartItemsCount = Cart::with('product')->where('user_id', auth()->id())->count();
-
+       
         $html = '';
         $grandTotal = 0;
 
@@ -868,6 +917,7 @@ class FrontendController extends Controller
                     'cart_id'      => $item->id,
                     'user_id'      => $userId,
                     'address_id'   => $addressId,      // store delivery address
+                    'weight'       => $item->weight,
                     'price'        => $item->price,
                     'discount'     => $item->discount ?? 0,
                     'coupon_code'  => $couponCode,
@@ -926,6 +976,7 @@ class FrontendController extends Controller
                     'address_id'    => $request->address_id,
                     'product_id'    => $item->product_id,
                     'cart_id'      => $item->id,
+                    'weight'       => $item->weight,
                     'price'         => $item->price,
                     'discount'      => $request->discount ?? 0,
                     'coupon_code'   => $request->coupon_code ?? 0,
@@ -974,7 +1025,6 @@ class FrontendController extends Controller
 
     public function savePayment(Request $request)
     {
-        // dd($request->all());
         DB::beginTransaction();
 
         try {
@@ -1018,8 +1068,7 @@ class FrontendController extends Controller
             ]);
 
             // ✅ Create payment row for EACH order
-            // foreach ($orderIds as $orderId) {
-            // dd($orderIds);
+
             PaymentDetail::create([
                 'order_id'          =>  json_encode($orderIds), // Always integer
                 'payment_id'        => $request->razorpay_payment_id,
@@ -1030,7 +1079,6 @@ class FrontendController extends Controller
                 'payment_status'    => 1,
                 'status'            => 1
             ]);
-            // }
 
             Cart::where('user_id', auth()->id())->delete();
 

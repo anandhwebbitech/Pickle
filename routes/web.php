@@ -66,23 +66,33 @@ Route::middleware('auth')->group(function () {
 Route::get('/admin-login', [AdminController::class,'Login'])->name('adminlogin');
 Route::post('/login', [AdminController::class, 'LoginCheck'])->name('login.submit');
 
-Route::get('/admin-dashboard', [AdminController::class,'Dashboard'])->name('adminhome');
-Route::get('/admin-product', [AdminController::class,'Product'])->name('productpage');
-Route::get('/admin-category', [AdminController::class,'Categories'])->name('categoriespage');
-Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
-Route::post('/categories', [CategoryController::class, 'Store'])->name('categories.store');
-Route::get('/categories/{id}/edit', [CategoryController::class, 'edit'])->name('categories.edit');
-Route::delete('/categories/{id}', [CategoryController::class, 'destroy'])->name('categories.destroy');
-Route::put('/categories/{id}', [CategoryController::class, 'update'])->name('admin.categoryupdate');
-Route::post('/products', [ProductController::class, 'store'])->name('products.store');
-Route::get('/admin-products', [ProductController::class, 'index'])->name('products.index');
-Route::get('products/{id}/edit', [ProductController::class, 'edit'])->name('products.edit');
-Route::put('products/{id}', [ProductController::class, 'update'])->name('products.update');
-Route::delete('products/{id}', [ProductController::class, 'destroy'])->name('products.destroy');
-Route::get('/coupon', [AdminController::class, 'Coupon'])->name('couponpage');
-Route::post('/admin/coupons', [CouponController::class, 'store'])->name('coupons.store');
-Route::get('/admin/coupons/list', [CouponController::class, 'datatable'])->name('coupons.datatable');
-Route::get('/coupons/{id}/edit', [CouponController::class, 'edit'])->name('coupons.edit');
-Route::put('/coupons/{coupon}', [CouponController::class, 'update'])->name('coupons.update');
-Route::delete('/coupons/{coupon}', [CouponController::class, 'destroy'])->name('coupons.destroy');
+Route::middleware(['admin'])->group(function () {
+    Route::get('/admin-dashboard', [AdminController::class,'Dashboard'])->name('adminhome');
+    Route::get('/admin-product', [AdminController::class,'Product'])->name('productpage');
+    Route::get('/admin-category', [AdminController::class,'Categories'])->name('categoriespage');
+    Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
+    Route::post('/categories', [CategoryController::class, 'Store'])->name('categories.store');
+    Route::get('/categories/{id}/edit', [CategoryController::class, 'edit'])->name('categories.edit');
+    Route::delete('/categories/{id}', [CategoryController::class, 'destroy'])->name('categories.destroy');
+    Route::put('/categories/{id}', [CategoryController::class, 'update'])->name('admin.categoryupdate');
+    Route::post('/products', [ProductController::class, 'store'])->name('products.store');
+    Route::get('/admin-products', [ProductController::class, 'index'])->name('products.index');
+    Route::get('products/{id}/edit', [ProductController::class, 'edit'])->name('products.edit');
+    Route::put('products/{id}', [ProductController::class, 'update'])->name('products.update');
+    Route::delete('products/{id}', [ProductController::class, 'destroy'])->name('products.destroy');
+    Route::get('/coupon', [AdminController::class, 'Coupon'])->name('couponpage');
+    Route::post('/admin/coupons', [CouponController::class, 'store'])->name('coupons.store');
+    Route::get('/admin/coupons/list', [CouponController::class, 'datatable'])->name('coupons.datatable');
+    Route::get('/coupons/{id}/edit', [CouponController::class, 'edit'])->name('coupons.edit');
+    Route::put('/coupons/{coupon}', [CouponController::class, 'update'])->name('coupons.update');
+    Route::delete('/coupons/{coupon}', [CouponController::class, 'destroy'])->name('coupons.destroy');
+    Route::get('/Order-list',[AdminController::class,'OrderList'])->name('orderlist');
+    Route::get('/adminorderlist', [ProductController::class, 'Orders'])->name('adminorders');
 
+    Route::get('/payment-list',[AdminController::class,'PaymentList'])->name('paymentlist');
+    Route::get('/admin-paymentlist', [ProductController::class, 'Payments'])->name('payments');
+    Route::get('/admin-orderlist', [ProductController::class, 'DashboardOrders'])->name('dashboardorders');
+    Route::post('/update-delivery/{id}', [ProductController::class, 'updateDelivery'])->name('update.delivery');
+
+    Route::get('/admin/order-view/{id}', [ProductController::class, 'viewOrder'])->name('admin.order.view');
+});

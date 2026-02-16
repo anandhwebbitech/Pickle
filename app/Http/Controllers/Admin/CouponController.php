@@ -21,6 +21,10 @@ class CouponController extends Controller
                     'code'   => $coupon->code,
                     'type'   => $coupon->type == 1 ? 'Percentage' : 'Amount',
                     'value'  => $coupon->value,
+                    'expiry_date'  =>$coupon->expiry_date 
+                                        ? \Carbon\Carbon::parse($coupon->expiry_date)->format('d-M-Y') 
+                                        : null,
+                    'use_limit'  => $coupon->use_limit,
                     'status' => $coupon->status == 1
                         ? '<span class="badge-active">Active</span>'
                         : '<span class="badge-inactive">Inactive</span>',
@@ -44,6 +48,8 @@ class CouponController extends Controller
             'type'   => 'required|in:percentage,amount',
             'value'  => 'required|integer|min:1',
             'status' => 'required|boolean',
+            'limit'  => 'required',
+            'expiry_date'  => 'required'
         ]);
 
         Coupon::create([
@@ -51,6 +57,8 @@ class CouponController extends Controller
             'type'   => $request->type === 'percentage' ? 1 : 0, // 1 = %, 0 = amount
             'value'  => $request->value,
             'status' => $request->status,
+            'use_limit' => $request->limit,
+            'expiry_date' => $request->expiry_date,
         ]);
 
         return response()->json([
@@ -60,11 +68,11 @@ class CouponController extends Controller
     }
 
     public function edit($id)
-{
-    return response()->json(
-        Coupon::findOrFail($id)
-    );
-}
+    {
+        return response()->json(
+            Coupon::findOrFail($id)
+        );
+    }
 
 public function update(Request $request, $id)
 {
@@ -73,6 +81,8 @@ public function update(Request $request, $id)
         'type'   => 'required|in:percentage,amount',
         'value'  => 'required|integer|min:1',
         'status' => 'required|boolean',
+        'limit'  => 'required',
+        'expiry_date'  => 'required'
     ]);
 
     $coupon = Coupon::findOrFail($id);
@@ -82,6 +92,8 @@ public function update(Request $request, $id)
         'type'   => $request->type === 'percentage' ? 1 : 0,
         'value'  => $request->value,
         'status' => $request->status,
+        'use_limit' => $request->limit,
+        'expiry_date' => $request->expiry_date,
     ]);
 
     return response()->json([

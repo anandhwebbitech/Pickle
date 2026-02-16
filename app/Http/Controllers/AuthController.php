@@ -98,12 +98,12 @@ class AuthController extends Controller
         ]);
     }
     public function logout(Request $request)
-{
-    Auth::logout();
+    {
+        Auth::logout();
 
-    $request->session()->invalidate();
-    $request->session()->regenerateToken();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
 
-    return redirect()->route('login'); // make sure login route exists
-}
+        return redirect()->route('home'); // make sure login route exists
+    }
 }

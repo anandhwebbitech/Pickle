@@ -125,20 +125,25 @@
 
             <li class="nav-item w-100 w-lg-auto">
                 <div class="nav-pill">
-                    ✉️ <a href="mailto:pvmautomation@gmail.com" class="nav-link">
-                        pvmautomation@gmail.com
+                    ✉️ <a href="mailto:pickle@gmail.com" class="nav-link">
+                        pickle@gmail.com
                     </a>
                 </div>
             </li>
 
             <li class="nav-item w-100 w-lg-auto">
-                <a href="#"
+                {{-- <a href="#"
                    class="logout-btn d-block"
-                   onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                   >
                     Logout
+                </a> --}}
+                 <a href="{{ route('logout') }}"
+                    onclick="event.preventDefault(); document.getElementById('logout-form').submit();"
+                    class="logout-btn d-block">
+                    <i class="bi bi-box-arrow-left"></i> Logout
                 </a>
 
-                <form id="logout-form" action="#" method="POST" class="d-none">
+                <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
                     @csrf
                 </form>
             </li>
