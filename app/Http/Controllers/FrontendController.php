@@ -15,6 +15,7 @@ use Razorpay\Api\Api;
 use Illuminate\Support\Facades\DB;
 use Razorpay\Api\Errors\SignatureVerificationError;
 use Yajra\DataTables\Facades\DataTables;
+use Illuminate\Support\Facades\Mail;
 
 
 
@@ -25,13 +26,13 @@ class FrontendController extends Controller
     {
         $products = Product::where('status', 1)->get();
         $wishlistIds = [];
-
+        $categories = Category::where('status', 1)->get();
         if (auth()->check()) {
             $userId = auth()->id();
             $wishlist = session()->get('wishlist_' . $userId, []);
             $wishlistIds = array_keys($wishlist);
         }
-        return view('frontend.pages.index', compact('products', 'wishlistIds'));
+        return view('frontend.pages.index', compact('products', 'wishlistIds','categories'));
     }
     public function About()
     {
@@ -148,6 +149,12 @@ class FrontendController extends Controller
         // $total = $subtotal - $discount + $delivery;
 
         $user_delivery_address = UserAddress::where('status', 1)->where('is_default', 1)->first();
+        // If no default address found
+        if (!$user_delivery_address) {
+            $user_delivery_address = UserAddress::where('user_id', auth()->id())
+                ->where('status', 1)
+                ->first();
+        }
 
         return view('frontend.pages.checkout', compact(
             'cartItems',
@@ -287,9 +294,27 @@ class FrontendController extends Controller
                 }
 
                 // ✅ Safe image
-                $image = $product->image
-                    ? asset('public/uploads/products/' . $product->image)
-                    : asset('assets/img/product/default.webp');
+                // $image = $product->image
+                //     ? asset('public/uploads/products/' . $product->image)
+                //     : asset('assets/img/product/default.webp');
+                // ✅ Safe image
+                    $defaultImage =  $product->image;
+
+                    // Decode JSON string if needed
+                    $images = is_array($product->image) 
+                                ? $product->image 
+                                : (is_string($product->image) ? json_decode($product->image, true) : [$product->image]);
+
+                    // Ensure $images is an array
+                    $images = is_array($images) ? $images : [];
+
+                    // Get main and hover images with fallback
+                    $mainImage = $images[0] ?? $defaultImage;
+                    $hoverImage = $images[1] ?? $defaultImage;
+
+                    // Build asset URLs
+                    $mainImageUrl  = asset('public/uploads/products/' . $mainImage);
+                    $hoverImageUrl = asset('public/uploads/products/' . $hoverImage);
 
                 // ✅ Safe route
                 // $productUrl = route('product.details', $product->id);
@@ -308,8 +333,8 @@ class FrontendController extends Controller
                             <i class="bi bi-heart-fill text-danger"></i>
                         </button>
 
-                        <img src="' . $image . '" class="img-main">
-                        <img src="' . $image . '" class="img-hover">
+                        <img src="' . $mainImageUrl . '" class="img-main">
+                        <img src="' . $hoverImageUrl . '" class="img-hover">
 
                         <div class="view-overlay">
                             <a href="' . route('product-details', $product->id) . ' "
@@ -530,11 +555,29 @@ class FrontendController extends Controller
         $html = '';
 
         foreach ($cartItems as $item) {
+            // ✅ Safe image
+                $defaultImage = $item->product->image;
+
+                // Decode JSON string if needed
+                $images = is_array($item->product->image) 
+                            ? $item->product->image 
+                            : (is_string($item->product->image) ? json_decode($item->product->image, true) : [$item->product->image]);
+
+                // Ensure $images is an array
+                $images = is_array($images) ? $images : [];
+
+                // Get main and hover images with fallback
+                $mainImage = $images[0] ?? $defaultImage;
+                $hoverImage = $images[1] ?? $defaultImage;
+
+                // Build asset URLs
+                $mainImageUrl  = asset('public/uploads/products/' . $mainImage);
+                $hoverImageUrl = asset('public/uploads/products/' . $hoverImage);
             $totalAmount = $item->quantity * $item->price;
             $subtotal += $totalAmount;
             $html .= '
             <div class="yp-cart-item shadow-sm" data-id="' . $item->id . '">
-                <img src="' . asset('public/uploads/products/' . $item->product->image) . '" class="yp-item-thumb" alt="' . $item->product->name . '">
+                <img src="' . $mainImageUrl . '" class="yp-item-thumb" alt="' . $item->product->name . '">
                 <div class="yp-item-details">
                     <div class="d-flex justify-content-between align-items-start">
                         <span class="yp-item-name">' . $item->product->name . '</span>
@@ -549,7 +592,7 @@ class FrontendController extends Controller
                                 <span class="yp-qty-num">' . $item->quantity . '</span>
                                 <button class="yp-qty-btn" onclick="updateQty(this,' . $item->id . ', 1)">+</button>
                             </div>
-                            <a href="/product/' . $item->product_id . '" class="yp-btn-view-only" title="View Product">
+                            <a href="' . route('product-details', $item->product_id) . '"  class="yp-btn-view-only" title="View Product">
                                 <i class="bi bi-eye"></i>
                             </a>
                         </div>
@@ -590,7 +633,7 @@ class FrontendController extends Controller
         return response()->json(['success' => true]);
     }
 
-    public function updateCartItem(Request $request, $id)
+    public function updateCartItem11(Request $request, $id)
     {
         $cart = Cart::findOrFail($id);
         $cart->quantity += $request->change;
@@ -598,6 +641,33 @@ class FrontendController extends Controller
         $cart->total_amount = $cart->quantity * $cart->price;
         $cart->save();
         return response()->json(['success' => true]);
+    }
+    public function updateCartItem(Request $request, $id)
+    {
+        $cart = Cart::findOrFail($id);
+
+        if ($request->change > 0) {
+            $cart->increment('quantity', $request->change);
+        } else {
+            $cart->decrement('quantity', abs($request->change));
+        }
+
+        // Refresh model
+        $cart->refresh();
+
+        if ($cart->quantity < 1) {
+            $cart->quantity = 1;
+            $cart->save();
+        }
+
+        $cart->total_amount = $cart->quantity * $cart->price;
+        $cart->save();
+
+        return response()->json([
+            'status' => true,
+            'quantity' => $cart->quantity,
+            'total' => $cart->total_amount
+        ]);
     }
     // public function applyDiscount(Request $request)
     // {
@@ -833,9 +903,23 @@ class FrontendController extends Controller
             $itemTotal = $qty * $price;
             $grandTotal += $itemTotal;
 
-            $image = $product->image
-                ? asset('public/uploads/products/' . $product->image)
-                : asset('assets/img/product/default.webp');
+                $defaultImage = $product->image;
+
+                // Decode JSON string if needed
+                $images = is_array($product->image) 
+                            ? $product->image 
+                            : (is_string($product->image) ? json_decode($product->image, true) : [$product->image]);
+
+                // Ensure $images is an array
+                $images = is_array($images) ? $images : [];
+
+                // Get main and hover images with fallback
+                $mainImage = $images[0] ?? $defaultImage;
+                $hoverImage = $images[1] ?? $defaultImage;
+
+                // Build asset URLs
+                $mainImageUrl  = asset('public/uploads/products/' . $mainImage);
+                $hoverImageUrl = asset('public/uploads/products/' . $hoverImage);
 
             $html .= '
         <div class="cart-item d-flex align-items-center mb-4 p-3 bg-light rounded-4"
@@ -843,7 +927,7 @@ class FrontendController extends Controller
              data-price="' . $price . '">
 
             <div class="cart-img-container me-3">
-                <img src="' . $image . '" class="rounded-3 shadow-sm" width="60">
+                <img src="' . $mainImageUrl . '" class="rounded-3 shadow-sm" width="60">
             </div>
 
             <div class="flex-grow-1">
@@ -1195,5 +1279,43 @@ class FrontendController extends Controller
         return response()->json([
             'message' => 'Return request submitted successfully.'
         ]);
+    }
+
+    public function send(Request $request)
+    {
+        // 1. Validate the incoming request
+        $request->validate([
+            'fullname' => 'required|string|max:255',
+            'email' => 'required|email',
+            'phone_number' => 'nullable|string|max:20',
+            'message' => 'required|string',
+        ]);
+
+        // 2. Prepare email data
+        $data = [
+            'fullname' => $request->fullname,
+            'email' => $request->email,
+            'phone' => $request->phone_number ?? 'N/A',
+            'messageBody' => $request->message,
+        ];
+
+        // 3. Send email using Blade template
+        Mail::send('frontend.pages.email', $data, function ($message) use ($data) {
+            $message->to('anandhwebbitech@gmail.com')
+                ->subject('New Enquiry Recived')
+                ->from($data['email'], $data['fullname']); // optional: sender's email
+        });
+
+        // 4. Return JSON response
+        return response()->json(['success' => 'Message sent successfully!']);
+    }
+    public function search(Request $request)
+    {
+        $products = Product::where('name', 'LIKE', '%' . $request->keyword . '%')
+                    ->where('status', 1)
+                    ->take(5)
+                    ->get();
+
+        return response()->json($products);
     }
 }

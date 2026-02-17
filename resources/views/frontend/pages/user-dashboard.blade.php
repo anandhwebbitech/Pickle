@@ -69,8 +69,17 @@
                             {{-- <a href="#" class="btn btn-dark  rounded-pill py-2 fw-bold text-decoration-none shadow-sm">
                                 Track Your Order
                             </a> --}}
-                            <button class="yp-btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#profileModal">Edit
-                                Profile</button>
+                            {{-- <button class="yp-btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#profileModal">Edit
+                                Profile</button> --}}
+                                <button class="yp-btn-primary btn-sm editProfileBtn"
+                                        data-id="{{ auth()->user()->id }}"
+                                        data-name="{{ auth()->user()->name }}"
+                                        data-email="{{ auth()->user()->email }}"
+                                        data-phone="{{ auth()->user()->phone }}"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#profileModal">
+                                    Edit Profile
+                                </button>
 
                         </div>
                         <div class="row g-3">
@@ -219,13 +228,21 @@
             <div class="modal-content p-4">
                 <h5 class="fw-bold mb-3">Update Profile</h5>
                 <form id="profileForm">
+                    @csrf
+                    <input type="hidden" id="user-id">
+
                     <label class="yp-form-label">Full Name</label>
-                    <input type="text" id="input-name" class="yp-form-input" value="John Doe">
+                    <input type="text" id="input-name" class="yp-form-input" required>
+
                     <label class="yp-form-label">Email</label>
-                    <input type="email" id="input-email" class="yp-form-input" value="john@example.com">
+                    <input type="email" id="input-email" class="yp-form-input">
+
                     <label class="yp-form-label">Phone Number</label>
-                    <input type="tel" id="input-phone" class="yp-form-input" value="+91 98765 43210">
-                    <button type="submit" class="yp-btn-primary w-100 mt-2">Save Changes</button>
+                    <input type="tel" id="input-phone" class="yp-form-input">
+
+                    <button type="submit" class="yp-btn-primary w-100 mt-2">
+                        Save Changes
+                    </button>
                 </form>
             </div>
         </div>
@@ -331,6 +348,16 @@
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
         <script>
+            document.addEventListener("DOMContentLoaded", function () {
+
+                document.querySelector(".editProfileBtn").addEventListener("click", function () {
+                    document.getElementById("user-id").value = this.dataset.id;
+                    document.getElementById("input-name").value = this.dataset.name;
+                    document.getElementById("input-email").value = this.dataset.email;
+                    document.getElementById("input-phone").value = this.dataset.phone;
+                });
+
+            });
             // Tab Switching
             function switchTab(tabId, el) {
                 document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
@@ -620,6 +647,60 @@ let url = "{{ route('order.return', ':id') }}";
         }
     });
 });
+
+document.getElementById("profileForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    let userId = document.getElementById("user-id").value;
+
+    fetch("{{ route('profile.update', ':id') }}".replace(':id', userId), {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRF-TOKEN": document.querySelector('input[name="_token"]').value
+        },
+        body: JSON.stringify({
+            name: document.getElementById("input-name").value,
+            email: document.getElementById("input-email").value,
+            phone: document.getElementById("input-phone").value
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+
+        if (data.success) {
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Updated!',
+                text: 'Profile updated successfully.',
+                confirmButtonColor: '#5e0e3c'
+            });
+
+            // Close modal
+            let modal = bootstrap.Modal.getInstance(document.getElementById('profileModal'));
+            modal.hide();
+
+        } else {
+
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'Something went wrong!'
+            });
+
+        }
+    })
+    .catch(error => {
+        Swal.fire({
+            icon: 'error',
+            title: 'Server Error',
+            text: 'Please try again later.'
+        });
+        console.error("Error:", error);
+    });
+});
+
         </script>
 
 

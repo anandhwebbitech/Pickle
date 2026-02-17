@@ -106,4 +106,20 @@ class AuthController extends Controller
 
         return redirect()->route('home'); // make sure login route exists
     }
+    public function update(Request $request, $id)
+    {
+        $user = User::findOrFail($id);
+
+        $user->update([
+            'name' => $request->name,
+            'email' => $request->email,
+            'phone' => $request->phone,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'user' => $user
+        ]);
+    }
+
 }

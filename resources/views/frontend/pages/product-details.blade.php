@@ -30,19 +30,51 @@
                 <div class="col-lg-6">
                     <div class="swiper main-swiper">
                         <div class="swiper-wrapper">
+                            @php
+                                // Default image if array is empty
+                                $defaultImage = $product->image;
+
+                                // Decode JSON string if needed
+                                $images = is_array($product->image) 
+                                            ? $product->image 
+                                            : (is_string($product->image) ? json_decode($product->image, true) : [$product->image]);
+
+                                // Ensure $images is an array
+                                $images = $images ?: [];
+
+                                // Get main and hover images with fallback
+                                $mainImage = $images[0] ?? $defaultImage;
+                                $hoverImage = $images[1] ?? $defaultImage;
+                            @endphp
                             <div class="swiper-slide text-center"><img
-                                    src="{{ asset('public/uploads/products/' . $product->image) }}" class="img-fluid"></div>
+                                    src="{{ asset('public/uploads/products/' . $mainImage) }}" class="img-fluid"></div>
                             <div class="swiper-slide text-center"><img
-                                    src="{{ asset('public/uploads/products/' . $product->image) }}" class="img-fluid"></div>
+                                    src="{{ asset('public/uploads/products/' . $hoverImage) }}" class="img-fluid"></div>
                         </div>
                         <div class="swiper-button-next text-danger"></div>
                         <div class="swiper-button-prev text-danger"></div>
                     </div>
                     <div thumbsSlider="" class="swiper thumb-swiper">
+                        @php
+                            // Default image if array is empty
+                            $defaultImage = $product->image;
+
+                            // Decode JSON string if needed
+                            $images = is_array($product->image) 
+                                        ? $product->image 
+                                        : (is_string($product->image) ? json_decode($product->image, true) : [$product->image]);
+
+                            // Ensure $images is an array
+                            $images = $images ?: [];
+
+                            // Get main and hover images with fallback
+                            $mainImage = $images[0] ?? $defaultImage;
+                            $hoverImage = $images[1] ?? $defaultImage;
+                        @endphp
                         <div class="swiper-wrapper">
-                            <div class="swiper-slide"><img src="{{ asset('public/uploads/products/' . $product->image) }}">
+                            <div class="swiper-slide"><img src="{{ asset('public/uploads/products/' . $mainImage) }}">
                             </div>
-                            <div class="swiper-slide"><img src="{{ asset('public/uploads/products/' . $product->image) }}">
+                            <div class="swiper-slide"><img src="{{ asset('public/uploads/products/' . $hoverImage) }}">
                             </div>
                         </div>
                     </div>
@@ -50,7 +82,7 @@
 
                 <div class="col-lg-6">
                     <p class="text-danger fw-bold small mb-1">Yummy Pickle</p>
-                    <h1 class="fw-bold mb-2">Curry Leaf Powder</h1>
+                    <h1 class="fw-bold mb-2">{{$product->name}}</h1>
                     @php
                         $weights = json_decode($product->weight, true);
                     @endphp
@@ -97,10 +129,15 @@
                             data-id="{{ $product->id }}"data-url="{{ route('cart.add', $product->id) }}">
                             Add to Cart
                         </button>
-
-                        <button class="wishlist-btn" onclick="toggleWishlist(this)" title="Add to Wishlist">
-                            <i class="bi bi-heart"></i>
+                        @php
+                            $isInWishlist = in_array($product->id, $wishlistIds ?? []);
+                        @endphp
+                        <button class="wishlist-btn  {{ $isInWishlist ? 'active' : '' }}" onclick="toggleSave(this)"data-id="{{ $product->id }}">
+                            <i class="bi {{ $isInWishlist ? 'bi-heart-fill text-danger' : 'bi-heart' }}"></i>
                         </button>
+                        {{-- <button class="wishlist-btn" onclick="toggleWishlist(this)" title="Add to Wishlist">
+                            <i class="bi bi-heart"></i>
+                        </button> --}}
                     </div>
 
                     <div class="pt-4 border-top">
@@ -110,7 +147,7 @@
                                 <a href="#" onclick="social('fb')" class="text-dark"><i class="bi bi-facebook"></i></a>
                                 <a href="#" onclick="social('wa')" class="text-dark"><i class="bi bi-whatsapp"></i></a>
                             </div>
-                            <button onclick="copyToClip()" class="btn btn-sm btn-outline-dark rounded-pill px-3 ms-md-auto"
+                            <button onclick="copyToClipProduct()" class="btn btn-sm btn-outline-dark rounded-pill px-3 ms-md-auto"
                                 id="clip-btn">
                                 <i class="bi bi-link-45deg"></i> Copy Link
                             </button>
@@ -189,10 +226,27 @@
                                 <button class="save-btn {{ $isInWishlist ? 'active' : '' }}" onclick="toggleSave(this)"data-id="{{ $related->id }}">
                                     <i class="bi {{ $isInWishlist ? 'bi-heart-fill text-danger' : 'bi-heart' }}"></i>
                                 </button>
+                                @php
+                                    // Default image if array is empty
+                                    $defaultImage = $related->image;
+
+                                    // Decode JSON string if needed
+                                    $images = is_array($related->image) 
+                                                ? $related->image 
+                                                : (is_string($related->image) ? json_decode($related->image, true) : [$product->image]);
+
+                                    // Ensure $images is an array
+                                    $images = $images ?: [];
+
+                                    // Get main and hover images with fallback
+                                    $mainImage = $images[0] ?? $defaultImage;
+                                    $hoverImage = $images[1] ?? $defaultImage;
+                                @endphp
+
 
                                 <!-- Product Image -->
-                                <img src="{{ asset('public/uploads/products/' . $related->image) }}" class="img-main">
-                                <img src="{{ asset('public/uploads/products/' . $related->image) }}" class="img-hover">
+                                <img src="{{ asset('public/uploads/products/' . $mainImage) }}" class="img-main">
+                                <img src="{{ asset('public/uploads/products/' . $hoverImage) }}" class="img-hover">
 
 
                                 <div class="view-overlay">
@@ -379,6 +433,7 @@ function handleCartClick(btn) {
             btn.innerHTML = `<i class="bi bi-check-circle me-2"></i> Added`;
             btn.classList.remove("btn-dark");
             btn.classList.add("btn-success");
+            loadNavbarCart();
 
             setTimeout(() => {
                 btn.innerHTML = "Add to Cart";
@@ -476,6 +531,21 @@ function updateRelatedQty(btn, change) {
     if (qty < 1) qty = 1;
 
     qtyElement.innerText = qty;
+}
+
+function copyToClipProduct() {
+    const url = window.location.href;
+
+    navigator.clipboard.writeText(url).then(function() {
+        const btn = document.getElementById("clip-btn");
+        btn.innerHTML = "✅ Copied!";
+        
+        setTimeout(() => {
+            btn.innerHTML = '<i class="bi bi-link-45deg"></i> Copy Link';
+        }, 2000);
+    }).catch(function(err) {
+        alert("Failed to copy!");
+    });
 }
 </script>
 @endpush

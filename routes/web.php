@@ -59,6 +59,7 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/order/cancel/{id}', [FrontendController::class, 'cancelOrder'])->name('order.cancel');
     Route::post('/order/return/{id}', [FrontendController::class, 'returnOrder'])->name('order.return');
+    Route::post('/profile-update/{id}', [AuthController::class, 'update'])->name('profile.update');
 
 });
     Route::post('/add-to-cart/{id}', [FrontendController::class, 'addToCart'])->name('cart.add');
@@ -96,3 +97,5 @@ Route::middleware(['admin'])->group(function () {
 
     Route::get('/admin/order-view/{id}', [ProductController::class, 'viewOrder'])->name('admin.order.view');
 });
+Route::post('/send-contact', [FrontendController::class, 'send'])->name('contact.send');
+Route::get('/search-products', [FrontendController::class, 'search'])->name('products.search');

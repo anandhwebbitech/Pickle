@@ -5,7 +5,7 @@
 
                 <div class="col-lg-4">
                     <div class="mb-4">
-                        <img src="asset/img/anni-logo.png" alt="Yummy Pickle" style="width: 100px;" class="mb-2">
+                        <img src="{{ asset('asset/img/anni-logo.png') }}"  alt="Yummy Pickle" style="width: 100px;" class="mb-2">
                         <h5 class="fw-bold mb-0 text-ylo">Yummy Pickle</h5>
                     </div>
                     <p class="text-ylo small lh-lg">
@@ -59,10 +59,10 @@
                 <p class="small text-ylo mb-0">
                     2026 Copyright By <strong>Anni's Kitchen Products</strong> Powered By <a href="https://webbitech.com/" style="color:white;">Webbitech</a>
                 </p>
-                <div class="d-flex align-items-center gap-3 opacity-75">
-                    <img src="asset/img/visa.png" height="25" alt="Visa">
-                    <img src="asset/img/mastercard.png" height="25" alt="Master">
-                    <img src="asset/img/amex.png" height="25" alt="Amex">
+                <div class="d-flex align-items-center gap-2 opacity-75">
+                    <img src="{{ asset('asset/img/visa.png') }}" height="60" alt="Visa">
+                    <img src="{{ asset('asset/img/mastercard.png') }}" height="60" alt="Master">
+                    <img src="{{ asset('asset/img/amex.png') }}" height="60" alt="Amex">
                 </div>
 
             </div>
@@ -137,7 +137,7 @@ function updateQtyNav(el, cartId, change) {
 
     })
     .catch(err => console.error(err));
-    loadNavbarCart(); 
+    // loadNavbarCart(); 
 }
 $(document).on('click', '.nav-cart-remove', function () {
 
@@ -162,5 +162,54 @@ $(document).on('click', '.nav-cart-remove', function () {
     });
 
 });
+
+document.getElementById('productSearch').addEventListener('keyup', function () {
+
+        let keyword = this.value;
+        let resultBox = document.getElementById('searchResults');
+
+        if (keyword.length < 2) {
+            resultBox.classList.add('d-none');
+            return;
+        }
+
+        fetch("{{ route('products.search') }}?keyword=" + keyword)
+            .then(response => response.json())
+            .then(data => {
+
+                resultBox.innerHTML = "";
+
+                if (data.length > 0) {
+                    resultBox.innerHTML = ""; // clear previous results
+
+                    data.forEach(product => {
+                        resultBox.innerHTML += `
+            <div class="search-item d-flex align-items-center gap-2 p-2"
+                 onclick="window.location='{{ route('product-details', ':id') }}'.replace(':id', ${product.id})"
+                 style="cursor:pointer;">
+
+                <img src="{{ asset('public/uploads/products') }}/${product.image}" 
+                     alt="${product.name}" 
+                     style="width:50px; height:50px; object-fit:cover; border-radius:8px;">
+
+                <div class="flex-grow-1">
+                    <div class="fw-semibold">${product.name}</div>
+                </div>
+            </div>
+        `;
+                    });
+
+                    resultBox.classList.remove('d-none');
+
+                } else {
+                    resultBox.innerHTML = `
+                        <div class="search-item text-muted p-2">
+                            No products found
+                        </div>
+                    `;
+                    resultBox.classList.remove('d-none');
+                }
+            });
+    });
 
 </script>

@@ -69,26 +69,27 @@
             <div class="col-lg-7 ps-lg-5">
                 <div class="py-2">
                     <h2 class="fw-bold mb-5" style="color: #212529;">Send Us a Message</h2>
-                    <form action="#">
+                    <form id="contactForm" method="POST" >
+                         @csrf
                         <div class="row g-4">
                             <div class="col-md-6">
                                 <label class="field-label-text">Full Name</label>
-                                <input type="text" class="form-control contact-field-input" placeholder="Enter your name" required>
+                                <input type="text" class="form-control contact-field-input " name="fullname" placeholder="Enter your name" required>
                             </div>
                             <div class="col-md-6">
                                 <label class="field-label-text">Phone Number</label>
-                                <input type="tel" class="form-control contact-field-input" placeholder="e.g. +91 98765 43210" required>
+                                <input type="tel" class="form-control contact-field-input" name="phone_number" placeholder="e.g. +91 98765 43210" required>
                             </div>
                             <div class="col-12">
                                 <label class="field-label-text">Email Address</label>
-                                <input type="email" class="form-control contact-field-input" placeholder="yourname@email.com" required>
+                                <input type="email" class="form-control contact-field-input" name="email" placeholder="yourname@email.com" required>
                             </div>
                             <div class="col-12">
                                 <label class="field-label-text">How can we help?</label>
-                                <textarea class="form-control contact-field-input" rows="5" placeholder="Tell us more about your inquiry..." required></textarea>
+                                <textarea class="form-control contact-field-input" rows="5" name="message" placeholder="Tell us more about your inquiry..." required></textarea>
                             </div>
                             <div class="col-12 pt-3">
-                                <button type="submit" class="btn-submit-contact shadow">Submit Message</button>
+                                <button type="submit" id="contactBtn" class="btn-submit-contact shadow">Submit Message</button>
                             </div>
                         </div>
                     </form>
@@ -104,4 +105,38 @@
             </iframe>
         </div>
     </section>
+    @push('scripts')
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+    $('#contactForm').on('submit', function(e) {
+        e.preventDefault();
+
+        var form = $(this);
+        var button = $('#contactBtn');
+
+        button.prop('disabled', true).text('Sending...');
+
+        $.ajax({
+            url: "{{ route('contact.send') }}",
+            method: "POST",
+            data: form.serialize(),
+            success: function(response) {
+                alert(response.success);
+                form.trigger("reset");
+                button.prop('disabled', false).text('Send Message');
+            },
+            error: function(xhr) {
+                var errors = xhr.responseJSON.errors;
+                var errorMsg = '';
+                for (var key in errors) {
+                    errorMsg += errors[key][0] + '\n';
+                }
+                alert(errorMsg);
+                button.prop('disabled', false).text('Send Message');
+            }
+        });
+    });
+</script>
+@endpush
 @endsection

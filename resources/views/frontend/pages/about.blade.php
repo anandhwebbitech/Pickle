@@ -56,8 +56,8 @@
                     <h2 class="fw-800 mb-4">No Preservatives. <br>Only <span class="text-brand">Passion.</span></h2>
                     <p class="text-muted lead">We believe in the power of simple ingredients. Local mangoes, hand-ground spices, and pure wood-pressed oils are the only things you'll find in our jars.</p>
                     <div class="d-flex gap-3 mt-4">
-                        <a href="product-list.php" class="btn btn-dark rounded-pill px-4 py-2 fw-bold">Explore Shop</a>
-                        <a href="contact.php" class="btn btn-outline-dark rounded-pill px-4 py-2 fw-bold">Contact Us</a>
+                        <a href="{{route('product')}}" class="btn btn-dark rounded-pill px-4 py-2 fw-bold">Explore Shop</a>
+                        <a href="{{route('contact')}}" class="btn btn-outline-dark rounded-pill px-4 py-2 fw-bold">Contact Us</a>
                     </div>
                 </div>
                 <div class="col-lg-6">

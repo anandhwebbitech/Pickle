@@ -33,7 +33,17 @@ class ProductController extends Controller
             return DataTables::of($products)
 
                 ->addColumn('image', function ($row) {
-                    return '<img src="' . asset('public/uploads/products/' . $row->image) . '" width="50" class="rounded">';
+
+                    $image = $row->image;
+
+                    if (str_starts_with($image, '[')) {
+                        $images = json_decode($image, true);
+                        $image = $images[0] ?? 'default.png';
+                    }
+
+                    return '<img src="' . asset('public/uploads/products/' . $image) . '" 
+                                width="50" 
+                                class="rounded">';
                 })
 
                 ->addColumn('category', function ($row) {
@@ -89,18 +99,24 @@ class ProductController extends Controller
             $request->validate([
                 'name'        => 'required|string|max:255',
                 'category_id' => 'required|integer',
-                'image'       => 'required|image|mimes:jpg,jpeg,png,webp',
+                'images' => 'required|array|max:2',
+                'images.*' => 'image|mimes:jpeg,png,jpg,webp|max:2048',
                 'quantity'    => 'required|numeric', // KG
                 'weights.*.weight' => 'required|string',
                 'weights.*.price'  => 'required|numeric',
             ]);
 
 
-            $imagePath = null;
-            if ($request->hasFile('image')) {
-                $imageName = time() . '.' . $request->image->extension();
-                $request->image->move(public_path('uploads/products'), $imageName);
-                $imagePath = $imageName;
+            $imagePaths = [];
+            if ($request->hasFile('images')) {
+
+                foreach ($request->file('images') as $image) {
+
+                    $imageName = time() . '_' . uniqid() . '.' . $image->extension();
+                    $image->move(public_path('uploads/products'), $imageName);
+
+                    $imagePaths[] = $imageName; // store file name in array
+                }
             }
             // 3️⃣ Store product
             $product = Product::create([
@@ -111,7 +127,7 @@ class ProductController extends Controller
                 'weight'      => null, // handled in price table
                 'quantity'    => $request->quantity, // KG
                 'contains'    => $request->contains ? json_encode($request->contains) : null,
-                'image'       => $imagePath,
+                'image'       => json_encode($imagePaths),
                 'status'      => 1,
             ]);
 
@@ -173,15 +189,43 @@ class ProductController extends Controller
         $product = Product::findOrFail($id);
 
         $data = $request->validate([
-            'name' => 'required',
-            'category_id' => 'required',
-            'quantity' => 'nullable',
+            'name'        => 'required|string|max:255',
+            'category_id' => 'required|integer',
+            'quantity'    => 'nullable|numeric',
             'description' => 'nullable',
-            'image' => 'nullable|image',
+            'images'      => 'nullable|array|max:2',
+            'images.*'    => 'image|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
 
-        if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('products', 'public');
+        // ❌ Remove images from validated data
+        unset($data['images']);
+
+        // ✅ Handle Images
+        if ($request->hasFile('images')) {
+
+            // Delete old images
+            if ($product->image) {
+                $oldImages = json_decode($product->image, true);
+
+                if (is_array($oldImages)) {
+                    foreach ($oldImages as $old) {
+                        $oldPath = public_path('uploads/products/' . $old);
+                        if (file_exists($oldPath)) {
+                            unlink($oldPath);
+                        }
+                    }
+                }
+            }
+
+            $imagePaths = [];
+
+            foreach ($request->file('images') as $image) {
+                $imageName = time() . '_' . uniqid() . '.' . $image->extension();
+                $image->move(public_path('uploads/products'), $imageName);
+                $imagePaths[] = $imageName;
+            }
+
+            $data['image'] = json_encode($imagePaths);
         }
 
         $data['deals'] = $request->deals ? 1 : 0;
@@ -190,7 +234,10 @@ class ProductController extends Controller
 
         $product->update($data);
 
-        return response()->json(['success' => true]);
+        return response()->json([
+            'status' => true,
+            'message' => 'Product updated successfully'
+        ]);
     }
 
     /* ================= DELETE ================= */
@@ -212,8 +259,21 @@ class ProductController extends Controller
                 ->addColumn('product_name', function ($row) {
                     return $row->product->name;
                 })
+                // ->addColumn('image', function ($row) {
+                //     return '<img src="' . asset('public/uploads/products/' . $row->product->image) . '" width="50" class="rounded">';
+                // })
                 ->addColumn('image', function ($row) {
-                    return '<img src="' . asset('public/uploads/products/' . $row->product->image) . '" width="50" class="rounded">';
+
+                    $image = $row->product->image;
+
+                    if (str_starts_with($image, '[')) {
+                        $images = json_decode($image, true);
+                        $image = $images[0] ?? 'default.png';
+                    }
+
+                    return '<img src="' . asset('public/uploads/products/' . $image) . '" 
+                                width="50" 
+                                class="rounded">';
                 })
 
                 ->addColumn('category', function ($row) {
@@ -254,15 +314,15 @@ class ProductController extends Controller
                     if (in_array($row->status, [0, 1, 4])) {
                         $deliverBtn = '
                             <button class="btn btn-sm btn-success deliverBtn"
-                                    data-id="'.$row->id.'"
-                                    data-price="'.$row->price.'">
+                                    data-id="' . $row->id . '"
+                                    data-price="' . $row->price . '">
                                 <i class="fa fa-truck"></i>
                             </button>
                         ';
                     }
                     $viewBtn = '
                         <button class="btn btn-sm btn-info viewBtn"
-                                data-id="'.$row->id.'">
+                                data-id="' . $row->id . '">
                             <i class="fa fa-eye"></i>
                         </button>
                     ';
@@ -347,8 +407,21 @@ class ProductController extends Controller
                 ->addColumn('product_name', function ($row) {
                     return $row->product->name;
                 })
+                // ->addColumn('image', function ($row) {
+                //     return '<img src="' . asset('public/uploads/products/' . $row->product->image) . '" width="50" class="rounded">';
+                // })
                 ->addColumn('image', function ($row) {
-                    return '<img src="' . asset('public/uploads/products/' . $row->product->image) . '" width="50" class="rounded">';
+
+                    $image = $row->product->image;
+
+                    if (str_starts_with($image, '[')) {
+                        $images = json_decode($image, true);
+                        $image = $images[0] ?? 'default.png';
+                    }
+
+                    return '<img src="' . asset('public/uploads/products/' . $image) . '" 
+                                width="50" 
+                                class="rounded">';
                 })
                 ->addColumn('price', function ($row) {
 
@@ -400,7 +473,7 @@ class ProductController extends Controller
                 'payment_status'    => 1,
                 'status'            => $request->status,
             ]);
-            if(!$payment){
+            if (!$payment) {
                 return response()->json([
                     'status' => false,
                     'message' => 'Payment Failed'
@@ -420,8 +493,8 @@ class ProductController extends Controller
     }
     public function viewOrder($id)
     {
-        $order = Order::with('user', 'product','address')
-                    ->findOrFail($id);
+        $order = Order::with('user', 'product', 'address')
+            ->findOrFail($id);
 
         return response()->json([
             'status' => true,

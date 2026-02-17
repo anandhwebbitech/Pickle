@@ -31,10 +31,10 @@
 
         <div class="divider">OR</div>
 
-        <a href="#" class="btn btn-outline-secondary w-100 rounded-pill py-2 small d-flex align-items-center justify-content-center gap-2 border-light-subtle">
+        {{-- <a href="#" class="btn btn-outline-secondary w-100 rounded-pill py-2 small d-flex align-items-center justify-content-center gap-2 border-light-subtle">
             <img src="https://cdn-icons-png.flaticon.com/512/300/300221.png" width="16">
             <span class="text-dark">Continue with Google</span>
-        </a>
+        </a> --}}
 
         <p class="text-center mt-4 mb-0 small text-muted">
             Don't have an account? <a href="{{ route('signup') }}" class="signup-link">Sign Up</a>

@@ -2,7 +2,31 @@
     .offcanvas-body{
         background: #5e0e3c;
     }
+
+.search-results {
+    position: absolute;
+    top: 45px;
+    left: 0;
+    width: 300px;
+    max-height: 350px;
+    overflow-y: auto;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    z-index: 9999;
+}
+
+.search-item {
+    padding: 10px 15px;
+    border-bottom: 1px solid #f1f1f1;
+    cursor: pointer;
+}
+
+.search-item:hover {
+    background: #f8f8f8;
+}
 </style>
+
 <div class="py-2 text-center small fw-bold text-uppercase border-bottom" style="letter-spacing: 2px; font-size: 10px;">
     Pure Quality <span class="text-calor mx-2">•</span> Fast Delivery <span class="text-calor mx-2">•</span> Customer Support
 </div>
@@ -30,9 +54,25 @@
                         <i class="bi bi-grid-fill me-1"></i> Categories
                     </button>
                     <ul class="dropdown-menu border-0 shadow-lg">
-                        <li><a class="dropdown-item" href="#">🌿 Organic Pulses</a></li>
+                        {{-- <li><a class="dropdown-item" href="#">🌿 Organic Pulses</a></li>
                         <li><a class="dropdown-item" href="#">🍯 Pure Honey</a></li>
-                        <li><a class="dropdown-item" href="#">🥜 Premium Nuts</a></li>
+                        <li><a class="dropdown-item" href="#">🥜 Premium Nuts</a></li> --}}
+                        @foreach($categories as $category)
+                        @php
+                            $icons = [
+                                'Organic Pulses' => 'bi-flower1',
+                                'Pure Honey' => 'bi-droplet',
+                                'Premium Nuts' => 'bi-basket',
+                            ];
+                        @endphp
+                            <li>
+                                <a class="dropdown-item" 
+                                href="{{ route('product', ['category' => $category->id]) }}">
+                                <i class="bi {{ $icons[$category->name] ?? 'bi-tag' }}"></i>
+                                    {{ $category->name }}
+                                </a>
+                            </li>
+                        @endforeach
                     </ul>
                 </div>
                 <a href="{{route('home')}}" class="nav-link-custom">Home</a>
@@ -42,9 +82,16 @@
             </div>
 
             <div class="d-flex align-items-center gap-2">
-                <div class="search-pill d-flex align-items-center d-none d-md-flex">
+                {{-- <div class="search-pill d-flex align-items-center d-none d-md-flex">
                     <i class="bi bi-search text-muted"></i>
                     <input type="text" placeholder="Find your flavor...">
+                </div> --}}
+                <div class="search-pill position-relative d-flex align-items-center d-none d-md-flex">
+                    <i class="bi bi-search text-muted"></i>
+                    <input type="text" id="productSearch" placeholder="Find your flavor..." autocomplete="off">
+
+                    <!-- Search Result Box -->
+                    <div id="searchResults" class="search-results d-none"></div>
                 </div>
 
                 <div class="dropdown">
@@ -61,7 +108,7 @@
                             <hr class="dropdown-divider">
                         </li>
                         <li><a class="dropdown-item" href="{{route('login')}}">Login / Register</a></li>
-                        <li><a class="dropdown-item" href="#">Track Order</a></li>
+                        {{-- <li><a class="dropdown-item" href="#">Track Order</a></li> --}}
                     </ul>
                 </div>
 
@@ -89,10 +136,18 @@
 
         <div class="mt-4">
             <h6 class="fw-bold text-muted small text-uppercase">Categories</h6>
-            <div class="d-grid gap-2 mt-3">
+            {{-- <div class="d-grid gap-2 mt-3">
                 <a href="#" class="btn btn-light text-start rounded-4 p-3">🌿 Organic Pulses</a>
                 <a href="#" class="btn btn-light text-start rounded-4 p-3">🍯 Pure Honey</a>
                 <a href="#" class="btn btn-light text-start rounded-4 p-3">🥜 Premium Nuts</a>
+            </div> --}}
+            <div class="d-grid gap-2 mt-3">
+                @foreach($categories as $category)
+                    <a href="{{ route('product', ['category' => $category->id]) }}" 
+                    class="btn btn-light text-start rounded-4 p-3">
+                        {{ $category->name }}
+                    </a>
+                @endforeach
             </div>
         </div>
     </div>

@@ -94,10 +94,26 @@
                                     <button class="save-btn {{ $isInWishlist ? 'active' : '' }}" onclick="toggleSave(this)"data-id="{{ $product->id }}">
                                         <i class="bi {{ $isInWishlist ? 'bi-heart-fill text-danger' : 'bi-heart' }}"></i>
                                     </button>
+                                    @php
+                                    // Default image if array is empty
+                                    $defaultImage = $product->image;
+
+                                    // Decode JSON string if needed
+                                    $images = is_array($product->image) 
+                                                ? $product->image 
+                                                : (is_string($product->image) ? json_decode($product->image, true) : [$product->image]);
+
+                                    // Ensure $images is an array
+                                    $images = $images ?: [];
+
+                                    // Get main and hover images with fallback
+                                    $mainImage = $images[0] ?? $defaultImage;
+                                    $hoverImage = $images[1] ?? $defaultImage;
+                                @endphp
 
                                     <!-- Product Image -->
-                                    <img src="{{ asset('public/uploads/products/' . $product->image) }}" class="img-main">
-                                    <img src="{{ asset('public/uploads/products/' . $product->image) }}" class="img-hover">
+                                    <img src="{{ asset('public/uploads/products/' . $mainImage) }}" class="img-main">
+                                    <img src="{{ asset('public/uploads/products/' . $hoverImage) }}" class="img-hover">
 
                                     <div class="view-overlay">
                                         <a href="{{ route('product-details', $product->id) }}"
