@@ -55,7 +55,7 @@ class AdminController extends Controller
     }
     public function PaymentList()
     {
-        return view('admin.pages.payment-list');
+        return view('admin.pages.Payment-list');
     }
     public function loginCheck(Request $request)
     {
