@@ -303,6 +303,8 @@ class ProductController extends Controller
                         return '<span class="badge bg-info">Order Confirm</span>';
                     } elseif ($row->status == 4) {
                         return '<span class="badge bg-danger">Returned</span>';
+                    } elseif ($row->status == 5 ) {
+                        return '<span class="badge bg-primary">Shipped</span>';
                     } else {
                         return '<span class="badge bg-danger">Cancelled</span>';
                     }
@@ -441,6 +443,8 @@ class ProductController extends Controller
                         return '<span class="badge bg-info">Order Confirm</span>';
                     } elseif ($row->status == 4) {
                         return '<span class="badge bg-danger">Returned</span>';
+                    } elseif ($row->status == 5 ) {
+                        return '<span class="badge bg-primary">Shipped</span>';
                     } else {
                         return '<span class="badge bg-danger">Cancelled</span>';
                     }

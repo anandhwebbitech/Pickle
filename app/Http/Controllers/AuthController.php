@@ -99,10 +99,15 @@ class AuthController extends Controller
     }
     public function logout(Request $request)
     {
+        $role = auth()->user()->role ?? null;
         Auth::logout();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+        
+        if ($role == 1) {
+            return redirect()->route('adminlogin');
+        }
 
         return redirect()->route('home'); // make sure login route exists
     }

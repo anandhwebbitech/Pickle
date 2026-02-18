@@ -7,6 +7,13 @@
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css">
 
 <style>
+    select.form-control-sm, 
+.dataTables_length select {
+    width: auto !important;      /* Allow it to grow to fit content */
+    min-width: 60px;             /* Ensure it's not too small */
+    padding-right: 20px !important; /* Space for the dropdown arrow */
+    appearance: none;            /* Optional: resets default browser styling */
+}
 /* ===== GLOBAL TEXT ===== */
 body {
     font-size: 13px;
@@ -403,32 +410,58 @@ $(document).on('click', '.editBtn', function () {
 });
 
     // ================= DELETE =================
-    $(document).on('click', '.deleteBtn', function () {
-        const id = $(this).data('id');
+$(document).on('click', '.deleteBtn', function () {
 
-        Swal.fire({
-            title: 'Are you sure?',
-            text: 'This category will be deleted!',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            confirmButtonText: 'Yes, delete it!'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                $.ajax({
-                    url: `/categories/${id}`,
-                    method: 'POST',
-                    data: {
-                        _token: '{{ csrf_token() }}',
-                        _method: 'DELETE'
-                    },
-                    success: function () {
-                        fetchCategories();
-                        Swal.fire('Deleted!', 'Category removed.', 'success');
-                    }
-                });
-            }
-        });
+    const id = $(this).data('id');
+
+    Swal.fire({
+        title: 'Are you sure?',
+        text: 'This category will be deleted!',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        confirmButtonText: 'Yes, delete it!'
+    }).then((result) => {
+
+        if (result.isConfirmed) {
+
+            let deleteUrl = "{{ route('categories.destroy', ':id') }}";
+            deleteUrl = deleteUrl.replace(':id', id);
+
+            $.ajax({
+                url: deleteUrl,
+                type: 'POST', // use type instead of method
+                data: {
+                    _token: "{{ csrf_token() }}",
+                    _method: "DELETE"
+                },
+
+                success: function (response) {
+
+                    // Reload DataTable properly
+                    categoryTable.ajax.reload(null, false);
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Deleted!',
+                        text: response.message,
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                },
+
+                error: function (xhr) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error!',
+                        text: xhr.responseJSON?.message ?? 'Something went wrong'
+                    });
+                }
+            });
+
+        }
     });
+
+});
 </script>
 @endpush

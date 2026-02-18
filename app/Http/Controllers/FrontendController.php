@@ -878,15 +878,20 @@ class FrontendController extends Controller
             return response()->json([
                 'status' => true,
                 'html' => '<div class="text-center py-4">Please login 🛒</div>',
-                'total' => 0
+                'total' => 0,
+                'cartcount' => 0
+
             ]);
         }
 
         $cartItems = Cart::with('product')
             ->where('user_id', auth()->id())
             ->get();
-        $cartItemsCount = Cart::with('product')->where('user_id', auth()->id())->count();
-       
+        $userId = auth()->id(); // null if not logged in
+        $cartItemsCount = 0;
+        if ($userId) {
+            $cartItemsCount = Cart::with('product')->where('user_id', $userId)->count();
+        }
         $html = '';
         $grandTotal = 0;
 
@@ -963,7 +968,6 @@ class FrontendController extends Controller
         if ($cartItems->isEmpty()) {
             $html = '<div class="text-center py-4">Cart is empty 🛒</div>';
         }
-
         return response()->json([
             'status' => true,
             'html'   => $html,
@@ -1215,6 +1219,8 @@ class FrontendController extends Controller
                     return '<span class="badge bg-info">Order Confirm</span>';
                 } elseif ($row->status == 4 ) {
                     return '<span class="badge bg-danger">Returned</span>';
+                } elseif ($row->status == 5 ) {
+                    return '<span class="badge bg-primary">Shipped</span>';
                 } else {
                     return '<span class="badge bg-danger">Cancelled</span>';
                 }

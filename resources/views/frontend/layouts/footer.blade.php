@@ -5,7 +5,7 @@
 
                 <div class="col-lg-4">
                     <div class="mb-4">
-                        <img src="{{ asset('asset/img/anni-logo.png') }}"  alt="Yummy Pickle" style="width: 100px;" class="mb-2">
+                        <a href="{{ route("home") }}"><img src="{{ asset('asset/img/anni-logo.png') }}"  alt="Yummy Pickle" style="width: 100px;" class="mb-2"></a>
                         <h5 class="fw-bold mb-0 text-ylo">Yummy Pickle</h5>
                     </div>
                     <p class="text-ylo small lh-lg">

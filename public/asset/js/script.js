@@ -31,7 +31,9 @@ function calculateGrand() {
   let sum = 0;
   totals.forEach((t) => (sum += parseInt(t.innerText)));
   document.getElementById("grandTotal").innerText = sum;
-  document.querySelector(".cart-count").innerText = totals.length;
+
+  let count = totals.length > 0 ? totals.length : 0;
+  document.querySelector(".cart-count").innerText = count;
   if (totals.length === 0) {
     document.querySelector(".cart-count").innerText = 0;
     document.getElementById("cartBody").innerHTML =

@@ -271,6 +271,7 @@
                                             <select id="status" class="swal2-select small-input">
                                                 <option value="2">Delivered</option>
                                                 <option value="0">Pending</option>
+                                                <option value="5">shipping</option>
                                             </select>
                                         `,
                 showCancelButton: true,
