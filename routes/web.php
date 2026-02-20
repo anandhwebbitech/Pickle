@@ -24,8 +24,9 @@ Route::post('/login-ajax', [AuthController::class, 'login'])->name(name: 'login.
 Route::get('product-details/{id}', action: [FrontendController::class,'ProductDetails'])->name('product-details');
 Route::get('/cart/navbar', [FrontendController::class, 'navbarCart'])->name('cart.navbar');
 Route::post('/signup-store', [AuthController::class, 'store'])->name('signup.store');
-
-
+Route::get('opt', action: [FrontendController::class,'OTP'])->name('otp');
+Route::post('verify-otp', [AuthController::class,'verifyOtp'])->name('verify.otp');
+Route::post('/resend-otp', [AuthController::class, 'resendOtp'])->name('resend.otp');
 // Route::get('product-details/{id}', action: [FrontendController::class,'ProductDetails'])->name('product-details');
 // Route::get('/product/{id}', [FrontendController::class, 'ProductShow'])->name('product.show');
 // AUTH

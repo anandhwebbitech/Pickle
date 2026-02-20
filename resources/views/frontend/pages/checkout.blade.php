@@ -106,11 +106,11 @@
                             <span class="fw-bold">₹{{ number_format($igst, 2) }}</span>
                         </div>
                     @endif
-                    <div class="d-flex justify-content-between mb-2">
+                    {{-- <div class="d-flex justify-content-between mb-2">
                         <span class="text-muted">Total GST  </span>
                         <!-- <span class="fw-bold text-decoration-line-through text-muted small me-2">₹729.00</span> -->
                         <span class="fw-bold">₹{{ number_format($gst_total, 2) }}</span>
-                    </div>
+                    </div> --}}
                     <div class="d-flex justify-content-between mb-2">
                         <span class="text-muted">@if(!empty($coupon) && isset($coupon['code']))
                             Discount ({{ $coupon['code'] }})

@@ -36,11 +36,12 @@
                     <div class="d-grid gap-3 mb-4">
                         <div class="d-flex align-items-start gap-3">
                             <i class="bi bi-geo-alt-fill" style="color:white; font-size: 1.2rem;"></i>
-                            <span class="small text-ylo"> Brooke Bond, 13/1b, Krishna samy Mudaliar Road, near Kikani Vidhya Mandir School, Layout, R.S. Puram, Coimbatore, Tamil Nadu 641002</span>
+                            <span class="small text-ylo"> No. 208/2, Vinayagar Kovil Street,
+                                Ayanoor, Vinnamangalam, Ambur,Tirupathur, Tamil Nadu - 635 807.</span>
                         </div>
-                        <a href="tel:+919876543210" class="d-flex align-items-center gap-3">
+                        <a href="tel:+919677739608" class="d-flex align-items-center gap-3">
                             <i class="bi bi-telephone-fill" style="color:white; font-size: 1.1rem;"></i>
-                            <span class="small text-ylo">Call us: +91 9876543210</span>
+                            <span class="small text-ylo">Call us: +91 9677739608</span>
                         </a>
                     </div>
 

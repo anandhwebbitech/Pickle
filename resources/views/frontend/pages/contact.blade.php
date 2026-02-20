@@ -33,8 +33,8 @@
                         <div class="brand-icon-square"><i class="bi bi-telephone-fill"></i></div>
                         <div>
                             <h6 class="info-label">Call or WhatsApp</h6>
-                            <a href="tel:+919876543210"><p class="info-content">+91 98765 43210</p></a>
-                            <a href="tel:+914222456789"><p class="info-content">+91 422 245 6789</p></a>
+                            <a href="tel:+919677739608"><p class="info-content">+91 9677739608</p></a>
+                            <a href="tel:+917338813818"><p class="info-content">+91 7338813818</p></a>
                         </div>
                     </div>
 
@@ -42,8 +42,8 @@
                         <div class="brand-icon-square"><i class="bi bi-envelope-open-fill"></i></div>
                         <div>
                             <h6 class="info-label">Email Address</h6>
-                            <a href="mailto:support@yummypickle.in"><p class="info-content">support@yummypickle.in</p></a>
-                            <a href="mailto:sales@yummypickle.in"><p class="info-content">sales@yummypickle.in</p></a>
+                            <a href="info@anniskitchen.com"><p class="info-content">info@anniskitchen.com</p></a>
+                            {{-- <a href="mailto:sales@yummypickle.in"><p class="info-content">sales@yummypickle.in</p></a> --}}
                         </div>
                     </div>
 
@@ -51,7 +51,9 @@
                         <div class="brand-icon-square"><i class="bi bi-geo-alt-fill"></i></div>
                         <div>
                             <h6 class="info-label">Our Main Office</h6>
-                            <p class="info-content">No 45, Heritage Street, Gandhipuram,<br>Coimbatore, Tamil Nadu 641012</p>
+                            <p class="info-content">No. 208/2, Vinayagar Kovil Street,
+                                Ayanoor, Vinnamangalam, Ambur,
+                                <br>Tirupathur, Tamil Nadu - 635 807.</p>
                         </div>
                     </div>
 

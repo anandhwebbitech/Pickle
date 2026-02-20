@@ -49,6 +49,10 @@ class FrontendController extends Controller
     {
         return view('frontend.pages.about');
     }
+    public function OTP()
+    {
+        return view('frontend.pages.otp-verify');
+    }
     public function Contact()
     {
         return view('frontend.pages.contact');
@@ -1776,7 +1780,7 @@ class FrontendController extends Controller
     {
         try {
             $userId = auth()->id();
-
+            $user = auth()->user();
             $cartItems = Cart::where('user_id', $userId)->get();
 
             if ($cartItems->isEmpty()) {
@@ -1792,16 +1796,16 @@ class FrontendController extends Controller
             $subtotal   = $request->subtotal ?? 0;
             $discount   = $request->discount ?? 0;
             $total      = $request->total ?? 0;
-
+            $orders = [];
             // You could store one row per cart item or create a single order with multiple items
             foreach ($cartItems as $item) {
-
-                Order::create([
+                $order =Order::create([
                     'product_id'   => $item->product_id,
                     'cart_id'      => $item->id,
                     'user_id'      => $userId,
                     'address_id'   => $addressId,      // store delivery address
                     'weight'       => $item->weight,
+                    'quantity'     => $item->quantity,
                     'price'        => $item->price,
                     'discount'     => $item->discount ?? 0,
                     'coupon_code'  => $couponCode,
@@ -1811,11 +1815,24 @@ class FrontendController extends Controller
                     'order_date'   => now(),
                     'delivery_date' => now()->addDays(7),
                 ]);
+                $order->load('product');
+                $orders[] = $order;
             }
 
             // Clear cart after order
             Cart::where('user_id', $userId)->delete();
-
+             $data = [
+                'fullname' => $user->name,
+                'email'    => $user->email,
+                'orders'   => $orders,
+                'order_date' => now(),
+            ];
+            // ✅ Send Mail like your enquiry
+            Mail::send('frontend.pages.order_email', $data, function ($message) use ($data) {
+                $message->to($data['email'])
+                    ->subject('Order Confirmation - COD')
+                    ->from($data['email'], $data['fullname']);
+            });
             return response()->json([
                 'status'   => true,
                 'redirect' => route('product') // you can redirect to order confirmation page
@@ -1861,6 +1878,7 @@ class FrontendController extends Controller
                     'product_id'    => $item->product_id,
                     'cart_id'      => $item->id,
                     'weight'       => $item->weight,
+                    'quantity'     => $item->quantity,
                     'price'         => $item->price,
                     'discount'      => $request->discount ?? 0,
                     'coupon_code'   => $request->coupon_code ?? 0,
@@ -1912,9 +1930,9 @@ class FrontendController extends Controller
         DB::beginTransaction();
 
         try {
-
+            $userId = auth()->id();
+            $user = auth()->user();
             $orderIds = $request->order_ids;
-
             // Convert JSON string to array
             if (is_string($orderIds)) {
                 $decoded = json_decode($orderIds, true);
@@ -1950,6 +1968,9 @@ class FrontendController extends Controller
             Order::whereIn('id', $orderIds)->update([
                 'status' => 1
             ]);
+            $orders = Order::with('product')
+                    ->whereIn('id', $orderIds)
+                    ->get();
 
             // ✅ Create payment row for EACH order
 
@@ -1965,7 +1986,21 @@ class FrontendController extends Controller
             ]);
 
             Cart::where('user_id', auth()->id())->delete();
+            // ✅ Prepare mail data
+            $data = [
+                'fullname'   => $user->name,
+                'email'      => $user->email,
+                'orders'     => $orders,
+                'order_date' => now(),
+                'payment_method' => 'Online Payment (Razorpay)'
+            ];
 
+            // ✅ Send email
+            Mail::send('frontend.pages.order_email', $data, function ($message) use ($data) {
+                $message->to($data['email'])
+                    ->subject('Order Confirmation - Online Payment')
+                    ->from($data['email'], $data['fullname']);
+            });
             DB::commit();
 
             return response()->json([
