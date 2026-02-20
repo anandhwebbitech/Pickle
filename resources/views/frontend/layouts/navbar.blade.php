@@ -42,10 +42,10 @@
                 <a href="{{route('home')}}" class="logo-text text-decoration-none text-dark">
                     <img style="width: 100px; margin-right: 20px;" src="asset/img/anni-logo.png" alt="">
                 </a>
-                <a href="tel:+91 9876543210" class="contact-pill d-none d-xl-flex align-items-center gap-2">
+                {{-- <a href="tel:+91 9876543210" class="contact-pill d-none d-xl-flex align-items-center gap-2">
                     <i class="bi bi-telephone-fill "></i>
                     <span>+91 98765 43210</span>
-                </a>
+                </a> --}}
             </div>
 
             <div class="d-none d-lg-flex align-items-center gap-2">
@@ -104,10 +104,54 @@
                                 <h6 class="fw-bold mb-0">My Account</h6>
                             </a>
                         </li>
+                        
                         <li>
                             <hr class="dropdown-divider">
                         </li>
-                        <li><a class="dropdown-item" href="{{route('login')}}">Login / Register</a></li>
+                        @auth
+
+                            <li>
+                                <a class="dropdown-item" href="{{ route('profile') }}">
+                                    <i class="bi bi-person me-2"></i> Personal Info
+                                </a>
+                            </li>
+
+                            <li>
+                                <a class="dropdown-item" href="{{ route('profile') }}?tab=orders">
+                                    <i class="bi bi-bag me-2"></i> Order History
+                                </a>
+                            </li>
+
+                            <li>
+                                <a class="dropdown-item" href="{{ route('profile') }}?tab=address">
+                                    <i class="bi bi-geo-alt me-2"></i> My Address
+                                </a>
+                            </li>
+
+                            <li>
+                                <a class="dropdown-item" href="{{ route('profile') }}?tab=password">
+                                    <i class="bi bi-key me-2"></i> Change Password
+                                </a>
+                            </li>
+                            {{-- User is logged in --}}
+                            <hr>
+                            <li>
+                                <form method="POST" action="{{ route('logout') }}">
+                                    @csrf
+                                    <button type="submit" class="dropdown-item">
+                                        <i class="bi bi-box-arrow-left"></i>  Logout
+                                    </button>
+                                </form>
+                            </li>
+                        @else
+                            {{-- User is NOT logged in --}}
+                            <li>
+                                <a class="dropdown-item" href="{{ route('login') }}">
+                                    Login / Register
+                                </a>
+                            </li>
+                        @endauth
+                        {{-- <li><a class="dropdown-item" href="{{route('login')}}">Login / Register</a></li> --}}
                         {{-- <li><a class="dropdown-item" href="#">Track Order</a></li> --}}
                     </ul>
                 </div>
@@ -162,10 +206,11 @@
         
     </div>
     <div class="p-4 border-top">
-        <div class="d-flex justify-content-between mb-4">
-            <span class="text-muted">Subtotal Amount</span>
-            <span class="fw-bold fs-4">₹<span id="cartGrandTotal">000</span></span>
-        </div>
+            <div class="d-flex justify-content-between mb-4">
+                <span class="text-muted">Subtotal Amount</span>
+                <span class="fw-bold fs-4">₹<span id="cartGrandTotal">000</span></span>
+            </div>
+
         {{-- <a href="{{route('checkout')}}" class="btn butn-calor w-100 py-3 fw-bold rounded-pill">Proceed to Checkout</a>
         <div class="my-3 text-center">
             <a href="{{route('cart')}}">Go to Cart</a>

@@ -225,7 +225,7 @@
                                     </div>
                                 </div>
 
-                                <div class="d-flex align-items-center gap-2 flex-nowrap">
+                                <div>
                                     @if($address->is_default == 1)
                                         <span class="badge bg-success me-2">Default</span>
                                     @endif
@@ -236,12 +236,12 @@
                                         data-city="{{ $address->city }}" data-state="{{ $address->state }}"
                                         data-pincode="{{ $address->pincode }}" data-default="{{ $address->is_default }}"
                                         data-bs-target="#editaddressModal">
-                                        <i class="bi bi-pencil-square me-1"></i>
+                                        Edit
                                     </button>
                                     <!-- Delete Button -->
                                     <button class="btn btn-sm btn-outline-danger rounded-pill px-3 deleteAddressBtn"
                                         data-id="{{ $address->id }}">
-                                        <i class="bi bi-trash3 me-1"></i>
+                                        Delete
                                     </button>
                                 </div>
 
@@ -345,7 +345,12 @@
 
                     <label class="yp-form-label">Address Line</label>
                     <textarea name="address_line1" class="yp-form-input" rows="3" required></textarea>
-
+                    <!-- Map Preview -->
+                    <div class="mt-3">
+                        <iframe id="pincodeMap" width="100%" height="250"
+                            style="border:0; border-radius:10px; display:none;" loading="lazy">
+                        </iframe>
+                    </div>
                     <div class="default-toggle mt-3">
                         <label class="switch">
                             <input type="checkbox" name="is_default" value="1">
@@ -361,7 +366,7 @@
             </div>
         </div>
     </div>
-    <!-- Edit Address Modal -->
+    <!-- Edit Profile -->
     <div class="modal fade" id="editaddressModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content p-4">
@@ -369,33 +374,32 @@
 
                 <form id="editaddressForm">
                     @csrf
-                    <input type="hidden" name="address_id" id="edit_address_id">
 
                     <label class="yp-form-label">Full Name</label>
-                    <input type="text" name="edit_full_name" id="edit_full_name" class="yp-form-input" required>
+                    <input type="text" name="edit_full_name" class="yp-form-input" required>
+                    <input type="hidden" name="address_id" id="edit_address_id">
 
                     <label class="yp-form-label">Mobile</label>
-                    <input type="text" name="edit_mobile" id="edit_mobile" class="yp-form-input" required>
-
-                    <label class="yp-form-label">Pincode</label>
-                    <input type="text" name="edit_pincode" id="edit_pincode" class="yp-form-input" required maxlength="6">
-
-                    <label class="yp-form-label">State</label>
-                    <input type="text" name="edit_state" id="edit_state" class="yp-form-input" readonly required>
-
-                    <label class="yp-form-label">City</label>
-                    <input type="text" name="edit_city" id="edit_city" class="yp-form-input" readonly required>
+                    <input type="text" name="edit_mobile" class="yp-form-input" required>
 
                     <label class="yp-form-label">Address Line</label>
-                    <textarea name="edit_address_line1" id="edit_address_line1" class="yp-form-input" rows="3"
-                        required></textarea>
+                    <textarea name="edit_address_line1" class="yp-form-input" rows="3" required></textarea>
 
-                    <div class="default-toggle mt-3">
-                        <label class="switch">
-                            <input type="checkbox" name="edit_is_default" id="edit_is_default" value="1">
-                            <span class="slider"></span>
+                    <label class="yp-form-label">City</label>
+                    <input type="text" name="edit_city" class="yp-form-input" required>
+
+                    <label class="yp-form-label">State</label>
+                    <input type="text" name="edit_state" class="yp-form-input" required>
+
+                    <label class="yp-form-label">Pincode</label>
+                    <input type="text" name="edit_pincode" class="yp-form-input" required>
+
+                    <div class="form-check mt-2">
+                        <input type="checkbox" name="edit_is_default" value="1" class="form-check-input"
+                            id="edit_defaultCheck">
+                        <label class="form-check-label" for="defaultCheck">
+                            Set as Default Address
                         </label>
-                        <span class="ms-2 fw-semibold">Set as Default Address</span>
                     </div>
 
                     <button type="submit" class="yp-btn-primary w-100 mt-3">
@@ -791,6 +795,14 @@
             document.getElementById("pincode").addEventListener("blur", function () {
 
                 let pincode = this.value.trim();
+                let stateInput = document.getElementById("state");
+                let cityInput = document.getElementById("city");
+                let mapFrame = document.getElementById("pincodeMap");
+
+                // Reset
+                stateInput.value = "";
+                cityInput.value = "";
+                mapFrame.style.display = "none";
 
                 if (pincode.length !== 6 || isNaN(pincode)) {
                     alert("Please enter a valid 6-digit pincode");
@@ -804,58 +816,31 @@
                         if (data[0].Status === "Success") {
 
                             let postOffice = data[0].PostOffice[0];
+                            let state = postOffice.State;
+                            let city = postOffice.District;
 
-                            document.getElementById("state").value = postOffice.State;
-                            document.getElementById("city").value = postOffice.District;
+                            // Fill state & city
+                            stateInput.value = state;
+                            cityInput.value = city;
+
+                            // Load Google Map based on pincode
+                            mapFrame.src = "https://www.google.com/maps?q="
+                                + pincode + "&output=embed";
+
+                            mapFrame.style.display = "block";
 
                         } else {
-
-                            document.getElementById("state").value = "";
-                            document.getElementById("city").value = "";
 
                             alert("Invalid Pincode. Please enter a correct pincode.");
                         }
 
                     })
-                    .catch(error => {
+                    .catch(() => {
                         alert("Unable to fetch location. Please try again.");
                     });
 
             });
-            document.getElementById("edit_pincode").addEventListener("blur", function () {
 
-                let pincode = this.value.trim();
-
-                if (pincode.length !== 6 || isNaN(pincode)) {
-                    alert("Please enter a valid 6-digit pincode");
-                    return;
-                }
-
-                fetch("https://api.postalpincode.in/pincode/" + pincode)
-                    .then(response => response.json())
-                    .then(data => {
-
-                        if (data[0].Status === "Success") {
-
-                            let postOffice = data[0].PostOffice[0];
-
-                            document.getElementById("edit_state").value = postOffice.State;
-                            document.getElementById("edit_city").value = postOffice.District;
-
-                        } else {
-
-                            document.getElementById("edit_state").value = "";
-                            document.getElementById("edit_city").value = "";
-
-                            alert("Invalid Pincode. Please enter a correct pincode.");
-                        }
-
-                    })
-                    .catch(error => {
-                        alert("Unable to fetch location. Please try again.");
-                    });
-
-            });
             const deleteAddressRoute = "{{ route('address.delete', ':id') }}";
 
             document.addEventListener("click", function (e) {

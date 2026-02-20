@@ -503,6 +503,10 @@ function changePrice(btn) {
     // Update price text
     document.getElementById("price-target").innerText =
         parseFloat(newPrice).toFixed(2);
+         // ✅ Reset quantity to 1
+    document.querySelectorAll(".qty-count").forEach(el => {
+        el.innerText = 1;
+    });
 }
 function updateQty(btn, change) {
 

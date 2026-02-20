@@ -25,14 +25,25 @@ class FrontendController extends Controller
     public function Home()
     {
         $products = Product::where('status', 1)->get();
+        $treding_deals = Product::where('status', 1)->where('deals',1)->get();
+        $south_indian = Product::where('status', 1)->where('south_indian',1)->get();
         $wishlistIds = [];
         $categories = Category::where('status', 1)->get();
         if (auth()->check()) {
+
             $userId = auth()->id();
+
+            // Logged user wishlist
             $wishlist = session()->get('wishlist_' . $userId, []);
-            $wishlistIds = array_keys($wishlist);
+        } else {
+
+            // Guest wishlist
+            $wishlist = session()->get('guest_wishlist', []);
         }
-        return view('frontend.pages.index', compact('products', 'wishlistIds','categories'));
+
+        // Get only product IDs
+        $wishlistIds = array_keys($wishlist);
+        return view('frontend.pages.index', compact('products', 'wishlistIds', 'categories','treding_deals','south_indian'));
     }
     public function About()
     {
@@ -78,10 +89,19 @@ class FrontendController extends Controller
         $wishlistIds = [];
 
         if (auth()->check()) {
+
             $userId = auth()->id();
+
+            // Logged user wishlist
             $wishlist = session()->get('wishlist_' . $userId, []);
-            $wishlistIds = array_keys($wishlist);
+        } else {
+
+            // Guest wishlist
+            $wishlist = session()->get('guest_wishlist', []);
         }
+
+        // Get only product IDs
+        $wishlistIds = array_keys($wishlist);
 
         $categories = Category::where('status', 1)->get();
 
@@ -90,14 +110,32 @@ class FrontendController extends Controller
             compact('products', 'wishlistIds', 'categories')
         );
     }
-    public function Wishlist()
+    public function Wishlist1()
     {
-        if (!auth()->check()) {
-            return redirect()->route('login');
-        }
+        // if (!auth()->check()) {
+        //     return redirect()->route('login');
+        // }
 
         $userId = auth()->id();
         $wishlist = session()->get('wishlist_' . $userId, []);
+
+        $productIds = array_keys($wishlist);
+
+        $products = Product::whereIn('id', $productIds)->get();
+
+        return view('frontend.pages.wishlist', compact('products'));
+    }
+    public function Wishlist()
+    {
+        if (auth()->check()) {
+
+            $sessionKey = 'wishlist_' . auth()->id();
+        } else {
+
+            $sessionKey = 'guest_wishlist';
+        }
+
+        $wishlist = session()->get($sessionKey, []);
 
         $productIds = array_keys($wishlist);
 
@@ -113,7 +151,7 @@ class FrontendController extends Controller
     {
         return view('frontend.pages.signup');
     }
-    public function Checkout()
+    public function Checkout1()
     {
         $userId = Auth::id();
 
@@ -126,6 +164,13 @@ class FrontendController extends Controller
         $coupon = session()->get('coupon', []);
 
         $discount = 0;
+        $user_delivery_address = UserAddress::where('status', 1)->where('user_id', auth()->id())->where('is_default', 1)->first();
+        // If no default address found
+        if (!$user_delivery_address) {
+            $user_delivery_address = UserAddress::where('user_id', auth()->id())
+                ->where('status', 1)
+                ->first();
+        }
 
         // ✅ Validate coupon belongs to current user
         if (!empty($coupon) && isset($coupon['user_id']) && $coupon['user_id'] == $userId) {
@@ -138,23 +183,17 @@ class FrontendController extends Controller
         if ($discount > $subtotal) {
             $discount = $subtotal;
         }
+
         $gst_rate = 18; // GST %
         $gst_total = ($subtotal * $gst_rate) / 100; // GST on subtotal
         $cgst = $gst_total / 2; // CGST 9%
         $sgst = $gst_total / 2; // SGST 9%
 
         $delivery = 0;
-        $total = $subtotal + $gst_total - $discount + $delivery ;
+        $total = $subtotal + $gst_total - $discount + $delivery;
 
         // $total = $subtotal - $discount + $delivery;
 
-        $user_delivery_address = UserAddress::where('status', 1)->where('is_default', 1)->first();
-        // If no default address found
-        if (!$user_delivery_address) {
-            $user_delivery_address = UserAddress::where('user_id', auth()->id())
-                ->where('status', 1)
-                ->first();
-        }
 
         return view('frontend.pages.checkout', compact(
             'cartItems',
@@ -167,6 +206,120 @@ class FrontendController extends Controller
             'user_delivery_address'
         ));
     }
+    public function Checkout()
+    {
+        $userId = Auth::id();
+
+        // Get cart items
+        $cartItems = Cart::with('product')->where('user_id', $userId)->get();
+
+        // Subtotal
+        $subtotal = $cartItems->sum(function ($item) {
+            return $item->price * $item->quantity;
+        });
+
+        // Get user delivery address (default preferred)
+        $user_delivery_address = UserAddress::where('user_id', $userId)
+            ->where('status', 1)
+            ->where('is_default', 1)
+            ->first();
+
+        if (!$user_delivery_address) {
+            $user_delivery_address = UserAddress::where('user_id', $userId)
+                ->where('status', 1)
+                ->first();
+        }
+
+        // If country/state/pin not stored, fetch via API
+        $pin_code = $user_delivery_address->pincode ?? null;
+        $country = $user_delivery_address->country ?? null;
+        $state   = $user_delivery_address->state ?? null;
+        if (!$country || !$state) {
+            if ($pin_code) {
+                $locationData = $this->getLocationFromPin($pin_code);
+                $country = $country ?? $locationData['country'] ?? null;
+                $state = $state ?? $locationData['state'] ?? null;
+            }
+        }
+
+        // Coupon validation
+        $coupon = session()->get('coupon', []);
+        $discount = 0;
+
+        if (!empty($coupon) && isset($coupon['user_id']) && $coupon['user_id'] == $userId) {
+            $discount = $coupon['discount'];
+        } else {
+            session()->forget('coupon');
+        }
+
+        if ($discount > $subtotal) {
+            $discount = $subtotal;
+        }
+
+        // GST calculation
+        $gst_rate = 18; // default GST % in India
+        $cgst = 0;
+        $sgst = 0;
+        $igst = 0;
+        if (strtolower($country) === 'india') {
+            $company_state = 'Tamil Nadu'; // your company state
+            if (strtolower($state) === strtolower($company_state)) {
+                $gst_total = ($subtotal - $discount) * $gst_rate / 100;
+                $cgst = $gst_total / 2;
+                $sgst = $gst_total / 2;
+            } else {
+                $igst = ($subtotal - $discount) * $gst_rate / 100;
+            }
+        }
+
+        $gst_total = $cgst + $sgst + $igst;
+
+        // Delivery charges
+        $delivery = 0;
+
+        // Final total
+        $total = ($subtotal - $discount) + $gst_total + $delivery;
+
+        return view('frontend.pages.checkout', compact(
+            'cartItems',
+            'subtotal',
+            'discount',
+            'delivery',
+            'cgst',
+            'sgst',
+            'igst',
+            'gst_total',
+            'total',
+            'coupon',
+            'user_delivery_address',
+            'pin_code',
+            'country',
+            'state'
+        ));
+    }
+
+    /**
+     * Fetch location data from API using PIN code
+     */
+    private function getLocationFromPin($pin_code)
+    {
+        $apiKey = env('PINCODE_API_KEY'); // optional if API requires key
+        $url = "https://api.postalpincode.in/pincode/{$pin_code}";
+
+        $response = file_get_contents($url);
+        $data = json_decode($response, true);
+
+        if (isset($data[0]['Status']) && $data[0]['Status'] === 'Success') {
+            $postOffice = $data[0]['PostOffice'][0] ?? [];
+            return [
+                'state' => $postOffice['State'] ?? null,
+                'country' => $postOffice['Country'] ?? null
+            ];
+        }
+
+        return ['state' => null, 'country' => null];
+    }
+
 
     public function Profile()
     {
@@ -185,15 +338,24 @@ class FrontendController extends Controller
 
         $wishlistIds = [];
         if (auth()->check()) {
+
             $userId = auth()->id();
+
+            // Logged user wishlist
             $wishlist = session()->get('wishlist_' . $userId, []);
-            $wishlistIds = array_keys($wishlist);
+        } else {
+
+            // Guest wishlist
+            $wishlist = session()->get('guest_wishlist', []);
         }
+
+        // Get only product IDs
+        $wishlistIds = array_keys($wishlist);
 
         return view('frontend.pages.product-details', compact('product', 'contains', 'related_products', 'wishlistIds'));
     }
 
-    public function toggleWishlist($id)
+    public function toggleWishlist1($id)
     {
         if (!auth()->check()) {
             return response()->json([
@@ -245,8 +407,62 @@ class FrontendController extends Controller
             'message' => $added ? 'Added to wishlist' : 'Removed from wishlist'
         ]);
     }
+    public function toggleWishlist($id)
+    {
+        // dd(7);
+        $product = Product::find($id);
 
-    public function wishlistData()
+        if (!$product) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Product not found'
+            ], 404);
+        }
+
+        // -------------------------------
+        // Logged In User
+        // -------------------------------
+        if (auth()->check()) {
+
+            $userId = auth()->id();
+            $sessionKey = 'wishlist_' . $userId;
+        } else {
+
+            // Guest User
+            $sessionKey = 'guest_wishlist';
+        }
+
+        $wishlist = session()->get($sessionKey, []);
+
+        if (isset($wishlist[$id])) {
+
+            unset($wishlist[$id]);
+            $added = false;
+        } else {
+
+            $price = $product->discount_price ?? $product->price;
+
+            $wishlist[$id] = [
+                "id"           => $product->id,
+                "product_name" => $product->product_name ?? $product->name,
+                "price"        => $price,
+                "quantity"     => 1,
+                "product_img"  => $product->image ?? null,
+            ];
+
+            $added = true;
+        }
+
+        session()->put($sessionKey, $wishlist);
+
+        return response()->json([
+            'status' => true,
+            'added'  => $added,
+            'count'  => count($wishlist),
+        ]);
+    }
+
+    public function wishlistData1()
     {
         try {
 
@@ -298,23 +514,23 @@ class FrontendController extends Controller
                 //     ? asset('public/uploads/products/' . $product->image)
                 //     : asset('assets/img/product/default.webp');
                 // ✅ Safe image
-                    $defaultImage =  $product->image;
+                $defaultImage =  $product->image;
 
-                    // Decode JSON string if needed
-                    $images = is_array($product->image) 
-                                ? $product->image 
-                                : (is_string($product->image) ? json_decode($product->image, true) : [$product->image]);
+                // Decode JSON string if needed
+                $images = is_array($product->image)
+                    ? $product->image
+                    : (is_string($product->image) ? json_decode($product->image, true) : [$product->image]);
 
-                    // Ensure $images is an array
-                    $images = is_array($images) ? $images : [];
+                // Ensure $images is an array
+                $images = is_array($images) ? $images : [];
 
-                    // Get main and hover images with fallback
-                    $mainImage = $images[0] ?? $defaultImage;
-                    $hoverImage = $images[1] ?? $defaultImage;
+                // Get main and hover images with fallback
+                $mainImage = $images[0] ?? $defaultImage;
+                $hoverImage = $images[1] ?? $defaultImage;
 
-                    // Build asset URLs
-                    $mainImageUrl  = asset('public/uploads/products/' . $mainImage);
-                    $hoverImageUrl = asset('public/uploads/products/' . $hoverImage);
+                // Build asset URLs
+                $mainImageUrl  = asset('public/uploads/products/' . $mainImage);
+                $hoverImageUrl = asset('public/uploads/products/' . $hoverImage);
 
                 // ✅ Safe route
                 // $productUrl = route('product.details', $product->id);
@@ -413,6 +629,155 @@ class FrontendController extends Controller
             ]);
         }
     }
+    public function wishlistData()
+    {
+        try {
+
+            // ✅ Determine correct session key
+            if (auth()->check()) {
+                $sessionKey = 'wishlist_' . auth()->id();
+            } else {
+                $sessionKey = 'guest_wishlist';
+            }
+
+            $wishlist = session()->get($sessionKey, []);
+            $productIds = array_keys($wishlist);
+
+            $products = Product::whereIn('id', $productIds)->get();
+
+            $html = '';
+
+            foreach ($products as $product) {
+
+                // ✅ Safe JSON decode (ONLY ONCE)
+                $prices = [];
+                if (!empty($product->weight)) {
+                    $decoded = json_decode($product->weight, true);
+                    if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                        $prices = $decoded;
+                    }
+                }
+
+                $firstPrice  = $prices[0]['price'] ?? 0;
+                $oldPrice    = $prices[0]['mrp'] ?? null;
+                $firstWeight = $prices[0]['weight'] ?? null;
+
+                // ✅ Discount badge
+                $discountBadge = '';
+                if ($oldPrice && $oldPrice > $firstPrice) {
+                    $discount = round((($oldPrice - $firstPrice) / $oldPrice) * 100);
+                    $discountBadge = '<span class="badge bg-danger position-absolute top-0 start-0 m-2" style="z-index:5;">' . $discount . '%</span>';
+                }
+
+                $defaultImage =  $product->image;
+
+                // Decode JSON string if needed
+                $images = is_array($product->image)
+                    ? $product->image
+                    : (is_string($product->image) ? json_decode($product->image, true) : [$product->image]);
+
+                // Ensure $images is an array
+                $images = is_array($images) ? $images : [];
+
+                // Get main and hover images with fallback
+                $mainImage = $images[0] ?? $defaultImage;
+                $hoverImage = $images[1] ?? $defaultImage;
+
+                // Build asset URLs
+                $mainImageUrl  = asset('public/uploads/products/' . $mainImage);
+                $hoverImageUrl = asset('public/uploads/products/' . $hoverImage);
+
+                $html .= '
+                    <div class="col-sm-6 col-md-4 col-lg-3">
+                        <div class="product-card p-3 border shadow-sm bg-white">
+
+                            <div class="img-container mb-3">
+
+                                ' . $discountBadge . '
+
+                                <button class="save-btn active" 
+                                        onclick="toggleSave(this)" 
+                                        data-id="' . $product->id . '">
+                                    <i class="bi bi-heart-fill text-danger"></i>
+                                </button>
+
+                                <img src="' . $mainImageUrl . '" class="img-main">
+                                <img src="' . $hoverImageUrl . '" class="img-hover">
+
+                                <div class="view-overlay">
+                                    <a href="' . route('product-details', $product->id) . '"
+                                    class="btn btn-light rounded-pill btn-sm fw-bold shadow-sm px-3">
+                                    View Product
+                                    </a>
+                                </div>
+                            </div>
+
+                            <h6 class="fw-bold mb-1">' . e($product->name) . '</h6>
+
+                            <p class="text-muted small mb-3">
+                                Spicy • Tangy • Traditional
+                            </p>
+
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="fw-bold fs-5 text-danger">
+                                        ₹' . number_format($firstPrice, 2) . '
+                                    </span>';
+
+                if ($oldPrice && $oldPrice > $firstPrice) {
+                    $html .= '
+                            <small class="text-muted text-decoration-line-through ms-1">
+                                ₹' . number_format($oldPrice, 2) . '
+                            </small>';
+                }
+
+                $html .= '
+                                </div>
+
+                                <div class="qty-pill">
+                                    <span class="qty-btn" onclick="updateQty(this, -1)">-</span>
+                                    <span class="local-qty fw-bold">1</span>
+                                    <span class="qty-btn" onclick="updateQty(this, 1)">+</span>
+                                </div>
+                            </div>
+
+                            <button class="btn btn-dark w-100 rounded-pill mt-3 py-2 fw-bold"
+                                onclick="handleCartClick(this)"
+                                data-id="' . $product->id . '"
+                                data-url="' . route('cart.add', $product->id) . '"
+                                data-weight="' . $firstWeight . '"
+                                data-price="' . $firstPrice . '">
+                                Add to Cart
+                            </button>
+
+                        </div>
+                    </div>';
+            }
+
+            // ✅ Empty Wishlist
+            if ($products->isEmpty()) {
+                $html = '
+                    <div class="col-12 text-center">
+                        <h5>Your wishlist is empty ❤️</h5>
+                        <a href="' . route('home') . '" class="btn btn-dark mt-3">
+                            Continue Shopping
+                        </a>
+                    </div>';
+            }
+
+            return response()->json([
+                'status' => true,
+                'html'   => $html
+            ]);
+        } catch (\Exception $e) {
+
+            return response()->json([
+                'status' => false,
+                'error'  => $e->getMessage(),
+                'line'   => $e->getLine()
+            ]);
+        }
+    }
     public function addToCart11(Request $request, $id)
     {
         $product = Product::find($id);
@@ -461,7 +826,7 @@ class FrontendController extends Controller
             'message' => 'Product added to cart successfully'
         ]);
     }
-    public function addToCart(Request $request, $id)
+    public function addToCart1(Request $request, $id)
     {
         // Check login manually
         if (!auth()->check()) {
@@ -530,6 +895,97 @@ class FrontendController extends Controller
             'message' => 'Product added to cart successfully'
         ]);
     }
+    public function addToCart(Request $request, $id)
+    {
+        $request->validate([
+            'weight'   => 'required',
+            'price'    => 'required|numeric',
+            'quantity' => 'required|integer|min:1',
+        ]);
+
+        $product = Product::find($id);
+
+        if (!$product) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Product not found'
+            ]);
+        }
+
+        $weight   = $request->weight;
+        $price    = $request->price;
+        $quantity = $request->quantity;
+
+        // =============================
+        // ✅ IF USER LOGGED IN
+        // =============================
+        if (auth()->check()) {
+
+            $userId = auth()->id();
+
+            $existingCart = Cart::where('user_id', $userId)
+                ->where('product_id', $id)
+                ->where('weight', $weight)
+                ->first();
+
+            if ($existingCart) {
+                $existingCart->quantity += $quantity;
+                $existingCart->total_amount = $existingCart->quantity * $price;
+                $existingCart->save();
+            } else {
+                Cart::create([
+                    'user_id'      => $userId,
+                    'product_id'   => $product->id,
+                    'category_id'  => $product->category_id ?? null,
+                    'quantity'     => $quantity,
+                    'weight'       => $weight,
+                    'price'        => $price,
+                    'discount'     => 0,
+                    'total_amount' => $price * $quantity,
+                    'status'       => 1
+                ]);
+            }
+
+            $cartCount = Cart::where('user_id', $userId)->sum('quantity');
+
+            return response()->json([
+                'status'  => true,
+                'count'   => $cartCount,
+                'message' => 'Product added to cart'
+            ]);
+        }
+
+        // =============================
+        // ✅ IF GUEST USER (SESSION)
+        // =============================
+
+        $sessionCart = session()->get('guest_cart', []);
+
+        $key = $id . '_' . $weight;
+
+        if (isset($sessionCart[$key])) {
+            $sessionCart[$key]['quantity'] += $quantity;
+        } else {
+            $sessionCart[$key] = [
+                'product_id' => $id,
+                'category_id' => $product->category_id ?? null,
+                'weight'     => $weight,
+                'price'      => $price,
+                'quantity'   => $quantity
+            ];
+        }
+
+        session()->put('guest_cart', $sessionCart);
+
+        $cartCount = array_sum(array_column($sessionCart, 'quantity'));
+
+        return response()->json([
+            'status'  => true,
+            'count'   => $cartCount,
+            'message' => 'Product added to cart (guest)'
+        ]);
+    }
+
     public function ProductShow($id)
     {
         $product = Product::findOrFail($id);
@@ -541,7 +997,7 @@ class FrontendController extends Controller
         session()->forget('coupon');
         return view('frontend.pages.cart');
     }
-    public function getCartItems(Request $request)
+    public function getCartItems1(Request $request)
     {
         $user_id = Auth::id();
 
@@ -556,23 +1012,23 @@ class FrontendController extends Controller
 
         foreach ($cartItems as $item) {
             // ✅ Safe image
-                $defaultImage = $item->product->image;
+            $defaultImage = $item->product->image;
 
-                // Decode JSON string if needed
-                $images = is_array($item->product->image) 
-                            ? $item->product->image 
-                            : (is_string($item->product->image) ? json_decode($item->product->image, true) : [$item->product->image]);
+            // Decode JSON string if needed
+            $images = is_array($item->product->image)
+                ? $item->product->image
+                : (is_string($item->product->image) ? json_decode($item->product->image, true) : [$item->product->image]);
 
-                // Ensure $images is an array
-                $images = is_array($images) ? $images : [];
+            // Ensure $images is an array
+            $images = is_array($images) ? $images : [];
 
-                // Get main and hover images with fallback
-                $mainImage = $images[0] ?? $defaultImage;
-                $hoverImage = $images[1] ?? $defaultImage;
+            // Get main and hover images with fallback
+            $mainImage = $images[0] ?? $defaultImage;
+            $hoverImage = $images[1] ?? $defaultImage;
 
-                // Build asset URLs
-                $mainImageUrl  = asset('public/uploads/products/' . $mainImage);
-                $hoverImageUrl = asset('public/uploads/products/' . $hoverImage);
+            // Build asset URLs
+            $mainImageUrl  = asset('public/uploads/products/' . $mainImage);
+            $hoverImageUrl = asset('public/uploads/products/' . $hoverImage);
             $totalAmount = $item->quantity * $item->price;
             $subtotal += $totalAmount;
             $html .= '
@@ -620,7 +1076,139 @@ class FrontendController extends Controller
             'total' => $total // can apply discounts later
         ]);
     }
-    public function removeCartItem($id)
+    public function getCartItems(Request $request)
+    {
+        $subtotal = 0;
+        $html = '';
+
+        // ======================================
+        // GET CART SOURCE (DB OR SESSION)
+        // ======================================
+        if (auth()->check()) {
+
+            $items = Cart::where('user_id', auth()->id())
+                ->where('status', 1)
+                ->with('product')
+                ->get()
+                ->map(function ($item) {
+                    return [
+                        'id'         => $item->id,
+                        'product'    => $item->product,
+                        'product_id' => $item->product_id,
+                        'quantity'   => $item->quantity,
+                        'price'      => $item->price,
+                        'weight'     => $item->weight,
+                        'is_guest'   => false
+                    ];
+                });
+        } else {
+
+            $sessionCart = session()->get('guest_cart', []);
+            $items = collect();
+
+            foreach ($sessionCart as $key => $item) {
+                $product = Product::find($item['product_id']);
+                if (!$product) continue;
+
+                $items->push([
+                    'id'         => $key,
+                    'product'    => $product,
+                    'product_id' => $item['product_id'],
+                    'quantity'   => $item['quantity'],
+                    'price'      => $item['price'],
+                    'weight'     => $item['weight'],
+                    'is_guest'   => true
+                ]);
+            }
+        }
+
+        // ======================================
+        // BUILD HTML
+        // ======================================
+        foreach ($items as $item) {
+
+            $product = $item['product'];
+
+            // Image Handling
+            $images = is_string($product->image)
+                ? json_decode($product->image, true)
+                : [$product->image];
+
+            $images = is_array($images) ? $images : [];
+            $mainImage = $images[0] ?? $product->image;
+            $mainImageUrl = asset('public/uploads/products/' . $mainImage);
+
+            $totalAmount = $item['quantity'] * $item['price'];
+            $subtotal += $totalAmount;
+
+            // Guest needs string id in JS
+            $jsId = $item['is_guest']
+                ? "'" . $item['id'] . "', true"
+                : $item['id'];
+
+            $html .= '
+        <div class="yp-cart-item shadow-sm" data-id="' . $item['id'] . '">
+            <img src="' . $mainImageUrl . '" class="yp-item-thumb" alt="' . e($product->name) . '">
+
+            <div class="yp-item-details">
+                <div class="d-flex justify-content-between align-items-start">
+                    <span class="yp-item-name">' . e($product->name) . '</span>
+                    <i class="bi bi-trash3 yp-btn-remove"
+                       data-id="' . $item['id'] . '"></i>
+                </div>
+
+                <span class="yp-item-spec">
+                    Volume: ' . $item['weight'] . ' | Price: ₹' . $item['price'] . '
+                </span>
+
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="yp-qty-pill">
+                            <button class="yp-qty-btn"
+                                onclick="updateQty(this,' . $jsId . ',-1)">-</button>
+
+                            <span class="yp-qty-num">' . $item['quantity'] . '</span>
+
+                            <button class="yp-qty-btn"
+                                onclick="updateQty(this,' . $jsId . ',1)">+</button>
+                        </div>
+
+                        <a href="' . route('product-details', $item['product_id']) . '"
+                           class="yp-btn-view-only">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                    </div>
+
+                    <span class="yp-item-price">₹' . $totalAmount . '</span>
+                </div>
+            </div>
+        </div>';
+        }
+
+        // ======================================
+        // TAX CALCULATION
+        // ======================================
+        $gst_rate = 18;
+        $gst_total = ($subtotal * $gst_rate) / 100;
+        $cgst = $gst_total / 2;
+        $sgst = $gst_total / 2;
+        $delivery = 0;
+        // $total = $subtotal + $gst_total + $delivery;
+        $total = $subtotal  + $delivery;
+
+        return response()->json([
+            'html'      => $html ?: '<div class="text-center py-5">Cart is empty 🛒</div>',
+            'subtotal'  => round($subtotal, 2),
+            'cgst'      => round($cgst, 2),
+            'sgst'      => round($sgst, 2),
+            'gst_total' => round($gst_total, 2),
+            'delivery'  => $delivery,
+            'total'     => round($total, 2)
+        ]);
+    }
+
+
+    public function removeCartItem1($id)
     {
         $cart = Cart::find($id);
 
@@ -631,6 +1219,51 @@ class FrontendController extends Controller
         $cart->delete();
 
         return response()->json(['success' => true]);
+    }
+    public function removeCartItem(Request $request, $id)
+    {
+        // ======================================
+        // ✅ IF USER LOGGED IN (DATABASE)
+        // ======================================
+        if (auth()->check()) {
+
+            $cart = Cart::where('id', $id)
+                ->where('user_id', auth()->id())
+                ->first();
+
+            if (!$cart) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Item not found'
+                ]);
+            }
+
+            $cart->delete();
+
+            return response()->json([
+                'success' => true
+            ]);
+        }
+
+        // ======================================
+        // ✅ GUEST USER (SESSION CART)
+        // ======================================
+        $guestCart = session()->get('guest_cart', []);
+
+        if (isset($guestCart[$id])) {
+
+            unset($guestCart[$id]);
+            session()->put('guest_cart', $guestCart);
+
+            return response()->json([
+                'success' => true
+            ]);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Item not found'
+        ]);
     }
 
     public function updateCartItem11(Request $request, $id)
@@ -791,9 +1424,9 @@ class FrontendController extends Controller
         }
 
         $delivery = 0;
-        $gst_rate = 18;
-        $gst_total = ($subtotal * $gst_rate) / 100;
-        $total = $subtotal + $gst_total - $discount + $delivery;    
+        // $gst_rate = 18;
+        // $gst_total = ($subtotal * $gst_rate) / 100;
+        $total = $subtotal  - $discount + $delivery;
 
         // ✅ Store only coupon in session
         session()->put('coupon', [
@@ -872,7 +1505,7 @@ class FrontendController extends Controller
         ]);
     }
 
-    public function navbarCart()
+    public function navbarCart1()
     {
         if (!auth()->check()) {
             return response()->json([
@@ -908,23 +1541,23 @@ class FrontendController extends Controller
             $itemTotal = $qty * $price;
             $grandTotal += $itemTotal;
 
-                $defaultImage = $product->image;
+            $defaultImage = $product->image;
 
-                // Decode JSON string if needed
-                $images = is_array($product->image) 
-                            ? $product->image 
-                            : (is_string($product->image) ? json_decode($product->image, true) : [$product->image]);
+            // Decode JSON string if needed
+            $images = is_array($product->image)
+                ? $product->image
+                : (is_string($product->image) ? json_decode($product->image, true) : [$product->image]);
 
-                // Ensure $images is an array
-                $images = is_array($images) ? $images : [];
+            // Ensure $images is an array
+            $images = is_array($images) ? $images : [];
 
-                // Get main and hover images with fallback
-                $mainImage = $images[0] ?? $defaultImage;
-                $hoverImage = $images[1] ?? $defaultImage;
+            // Get main and hover images with fallback
+            $mainImage = $images[0] ?? $defaultImage;
+            $hoverImage = $images[1] ?? $defaultImage;
 
-                // Build asset URLs
-                $mainImageUrl  = asset('public/uploads/products/' . $mainImage);
-                $hoverImageUrl = asset('public/uploads/products/' . $hoverImage);
+            // Build asset URLs
+            $mainImageUrl  = asset('public/uploads/products/' . $mainImage);
+            $hoverImageUrl = asset('public/uploads/products/' . $hoverImage);
 
             $html .= '
         <div class="cart-item d-flex align-items-center mb-4 p-3 bg-light rounded-4"
@@ -972,6 +1605,169 @@ class FrontendController extends Controller
             'status' => true,
             'html'   => $html,
             'total'  => number_format($grandTotal, 2),
+            'cartcount' => $cartItemsCount
+        ]);
+    }
+    public function navbarCart()
+    {
+        $html = '';
+        $grandTotal = 0;
+        $cartItemsCount = 0;
+
+        // ==========================================
+        // ✅ IF USER LOGGED IN (DATABASE CART)
+        // ==========================================
+        if (auth()->check()) {
+
+            $cartItems = Cart::with('product')
+                ->where('user_id', auth()->id())
+                ->get();
+
+            foreach ($cartItems as $item) {
+
+                if (!$item->product) continue;
+
+                $product = $item->product;
+
+                $qty    = $item->quantity;
+                $price  = $item->price;
+                $weight = $item->weight;
+
+                $itemTotal = $qty * $price;
+                $grandTotal += $itemTotal;
+                $cartItemsCount++;
+
+                // Image Handling
+                $images = is_string($product->image)
+                    ? json_decode($product->image, true)
+                    : [$product->image];
+
+                $images = is_array($images) ? $images : [];
+                $mainImage = $images[0] ?? $product->image;
+
+                $mainImageUrl = asset('public/uploads/products/' . $mainImage);
+
+                $html .= '
+            <div class="cart-item d-flex align-items-center mb-4 p-3 bg-light rounded-4"
+                 data-id="' . $item->id . '"
+                 data-price="' . $price . '">
+
+                <div class="cart-img-container me-3">
+                    <img src="' . $mainImageUrl . '" class="rounded-3 shadow-sm" width="60">
+                </div>
+
+                <div class="flex-grow-1">
+                    <h6 class="mb-0 fw-bold">' . e($product->name) . '</h6>
+                    <small class="text-muted">' . $weight . 'g</small>
+
+                    <div class="d-flex align-items-center mt-2 gap-3">
+
+                        <div class="d-flex align-items-center bg-white rounded-pill px-2 border" style="cursor:pointer;">
+                            <span class="btn-minus p-1"
+                                  onclick="updateQtyNav(this,' . $item->id . ', -1)">-</span>
+
+                            <span class="qty fw-bold mx-2 yp-qty-num">' . $qty . '</span>
+
+                            <span class="btn-plus p-1"
+                                  onclick="updateQtyNav(this,' . $item->id . ', 1)">+</span>
+                        </div>
+
+                        <div class="fw-bold text-calor">
+                            ₹<span class="item-total">' . number_format($itemTotal, 2) . '</span>
+                        </div>
+
+                    </div>
+                </div>
+
+                <button class="btn btn-sm text-muted btn-remove nav-cart-remove ms-2"
+                        data-id="' . $item->id . '">
+                    <i class="bi bi-x-circle-fill fs-5"></i>
+                </button>
+            </div>';
+            }
+        }
+
+        // ==========================================
+        // ✅ IF GUEST USER (SESSION CART)
+        // ==========================================
+        else {
+
+            $guestCart = session()->get('guest_cart', []);
+
+            foreach ($guestCart as $key => $item) {
+
+                $product = Product::find($item['product_id']);
+                if (!$product) continue;
+
+                $qty    = $item['quantity'];
+                $price  = $item['price'];
+                $weight = $item['weight'];
+
+                $itemTotal = $qty * $price;
+                $grandTotal += $itemTotal;
+                $cartItemsCount++;
+
+                // Image Handling
+                $images = is_string($product->image)
+                    ? json_decode($product->image, true)
+                    : [$product->image];
+
+                $images = is_array($images) ? $images : [];
+                $mainImage = $images[0] ?? $product->image;
+
+                $mainImageUrl = asset('public/uploads/products/' . $mainImage);
+
+                $html .= '
+            <div class="cart-item d-flex align-items-center mb-4 p-3 bg-light rounded-4"
+                 data-id="' . $key . '"
+                 data-price="' . $price . '">
+
+                <div class="cart-img-container me-3">
+                    <img src="' . $mainImageUrl . '" class="rounded-3 shadow-sm" width="60">
+                </div>
+
+                <div class="flex-grow-1">
+                    <h6 class="mb-0 fw-bold">' . e($product->name) . '</h6>
+                    <small class="text-muted">' . $weight . 'g</small>
+
+                    <div class="d-flex align-items-center mt-2 gap-3">
+
+                        <div class="d-flex align-items-center bg-white rounded-pill px-2 border" style="cursor:pointer;">
+                            <span class="btn-minus p-1"
+                                  onclick="updateQtyNav(this,\'' . $key . '\', -1, true)">-</span>
+
+                            <span class="qty fw-bold mx-2 yp-qty-num">' . $qty . '</span>
+
+                            <span class="btn-plus p-1"
+                                  onclick="updateQtyNav(this,\'' . $key . '\', 1, true)">+</span>
+                        </div>
+
+                        <div class="fw-bold text-calor">
+                            ₹<span class="item-total">' . number_format($itemTotal, 2) . '</span>
+                        </div>
+
+                    </div>
+                </div>
+
+                <button class="btn btn-sm text-muted btn-remove nav-cart-remove ms-2"
+                        data-id="' . $key . '">
+                    <i class="bi bi-x-circle-fill fs-5"></i>
+                </button>
+            </div>';
+            }
+        }
+
+        // ==========================================
+        // ✅ EMPTY CART
+        // ==========================================
+        if ($cartItemsCount == 0) {
+            $html = '<div class="text-center py-4">Cart is empty 🛒</div>';
+        }
+
+        return response()->json([
+            'status'    => true,
+            'html'      => $html,
+            'total'     => number_format($grandTotal, 2),
             'cartcount' => $cartItemsCount
         ]);
     }
@@ -1075,7 +1871,7 @@ class FrontendController extends Controller
                     'delivery_date' => now()->addDays(7),
                 ]);
 
-                Cart::where('user_id', $userId)->where('id', $item->id)->delete();
+                // Cart::where('user_id', $userId)->where('id', $item->id)->delete();
                 $createdOrders[] = $order->id;
             }
 
@@ -1213,13 +2009,13 @@ class FrontendController extends Controller
 
                 if ($row->status == 2) {
                     return '<span class="badge bg-success">Delivered</span>';
-                } elseif ($row->status == 0 ) {
+                } elseif ($row->status == 0) {
                     return '<span class="badge bg-warning">Pending</span>';
-                } elseif ($row->status == 1 ) {
+                } elseif ($row->status == 1) {
                     return '<span class="badge bg-info">Order Confirm</span>';
-                } elseif ($row->status == 4 ) {
+                } elseif ($row->status == 4) {
                     return '<span class="badge bg-danger">Returned</span>';
-                } elseif ($row->status == 5 ) {
+                } elseif ($row->status == 5) {
                     return '<span class="badge bg-primary">Shipped</span>';
                 } else {
                     return '<span class="badge bg-danger">Cancelled</span>';
@@ -1318,10 +2114,31 @@ class FrontendController extends Controller
     public function search(Request $request)
     {
         $products = Product::where('name', 'LIKE', '%' . $request->keyword . '%')
-                    ->where('status', 1)
-                    ->take(5)
-                    ->get();
+            ->where('status', 1)
+            ->take(5)
+            ->get();
 
         return response()->json($products);
+    }
+
+    public function Addressdestroy($id)
+    {
+        $address = UserAddress::where('id', $id)
+            ->where('user_id', auth()->id())
+            ->first();
+
+        if (!$address) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Address not found'
+            ]);
+        }
+
+        $address->delete();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Address deleted successfully'
+        ]);
     }
 }

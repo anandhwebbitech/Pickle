@@ -320,13 +320,22 @@
                                     </select>
                                 </div>
 
-                                <div class="col-md-4 d-flex gap-4 mt-4">
+                                <div class="col-md-4 d-flex gap-4 mt-4 p-4">
                                     <div class="form-check">
                                         <input type="checkbox" name="deals" id="edit_deals" value="1"
                                             class="form-check-input">
                                         <label class="form-check-label">Deals</label>
                                     </div>
+                                    <div class="form-check">
+                                        <input type="checkbox" name="south_indian" id="edit_south_indian"
+                                            value="1" class="form-check-input">
+                                        <label class="form-check-label">South Indian</label>
+                                    </div>
                                 </div>
+                                {{-- <div class="col-md-4 d-flex gap-4 mt-4">
+                                    
+                                </div> --}}
+
 
                                 <div class="col-md-4">
                                     <label>Image (Max 2)</label>
@@ -488,76 +497,17 @@
             });
 
         });
-        $('#addProductForm').on('submit', function (e) {
-            e.preventDefault();
-
-            let form = this;
-            let formData = new FormData(form);
-
-            $.ajax({
-                url: "{{ route('products.store') }}",
-                type: "POST",
-                data: formData,
-                processData: false,   // Important for FormData
-                contentType: false,   // Important for FormData
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                },
-
-                beforeSend: function () {
-                    // Optional: Disable button to prevent double click
-                    $('#addProductForm button[type="submit"]').prop('disabled', true);
-                },
-
-                success: function (response) {
-
-                    $('#addProductModal').modal('hide');
-                    form.reset();
-                    $('#weightPriceWrapper').html('');
-
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Added!',
-                        text: response.message ?? 'Product added successfully',
-                        timer: 1500,
-                        showConfirmButton: false
-                    });
-
-                    if (typeof reloadTable === "function") {
-                        reloadTable();
-                    }
-                },
-
-                error: function (xhr) {
-
-                    let message = 'Something went wrong';
-
-                    if (xhr.status === 422 && xhr.responseJSON.errors) {
-                        let errors = xhr.responseJSON.errors;
-                        message = Object.values(errors)[0][0];
-                    }
-
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Validation Error',
-                        text: message
-                    });
-                },
-
-                complete: function () {
-                    $('#addProductForm button[type="submit"]').prop('disabled', false);
-                }
-            });
-        });
+        
+        let productTable; // global variable to hold the DataTable instance
         $(document).ready(function () {
 
-            $('#productTable').DataTable({
+            productTable = $('#productTable').DataTable({
                 processing: true,
                 serverSide: true,
                 ajax: "{{ route('products.index') }}",
 
                 columns: [
-                    { data: 'id', name: 'id' },
+                    { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
 
                     {
                         data: 'image',
@@ -592,6 +542,64 @@
                     },
                 ]
             });
+            $('#addProductForm').on('submit', function (e) {
+            e.preventDefault();
+
+            let form = this;
+            let formData = new FormData(form);
+
+            $.ajax({
+                url: "{{ route('products.store') }}",
+                type: "POST",
+                data: formData,
+                processData: false,   // Important for FormData
+                contentType: false,   // Important for FormData
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+
+                beforeSend: function () {
+                    // Optional: Disable button to prevent double click
+                    $('#addProductForm button[type="submit"]').prop('disabled', true);
+                },
+
+                success: function (response) {
+
+                    $('#addProductModal').modal('hide');
+                    form.reset();
+                    $('#weightPriceWrapper').html('');
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Added!',
+                        text: response.message ?? 'Product added successfully',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                    window.location.reload(); 
+                },
+
+                error: function (xhr) {
+
+                    let message = 'Something went wrong';
+
+                    if (xhr.status === 422 && xhr.responseJSON.errors) {
+                        let errors = xhr.responseJSON.errors;
+                        message = Object.values(errors)[0][0];
+                    }
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Validation Error',
+                        text: message
+                    });
+                },
+
+                complete: function () {
+                    $('#addProductForm button[type="submit"]').prop('disabled', false);
+                }
+            });
+        });
 
         });
         $(document).on('click', '.editBtn', function () {
@@ -606,6 +614,7 @@
                 $('#edit_quantity').val(res.quantity);
                 $('#edit_description').val(res.description);
                 $('#edit_deals').prop('checked', res.deals == 1);
+                $('#edit_south_indian').prop('checked', res.south_indian == 1);
 
                 /* ===== WEIGHT & PRICE ===== */
                 let weights = JSON.parse(res.weight || '[]');

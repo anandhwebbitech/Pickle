@@ -29,25 +29,26 @@ Route::post('/signup-store', [AuthController::class, 'store'])->name('signup.sto
 // Route::get('product-details/{id}', action: [FrontendController::class,'ProductDetails'])->name('product-details');
 // Route::get('/product/{id}', [FrontendController::class, 'ProductShow'])->name('product.show');
 // AUTH
+Route::post('toggle-wishlist/{id}', [FrontendController::class, 'toggleWishlist']);
+Route::post('/toggle-wishlists/{id}', [FrontendController::class, 'toggleWishlist'])->name('toggle.wishlist');
+Route::get('/wishlist/data', [FrontendController::class, 'wishlistData'])->name('wishlist.data');
+Route::post('/address/update/{id}', [FrontendController::class, 'updateAddress'])->name('address.update');
+Route::get('cart', action: [FrontendController::class,'Cart'])->name('cart');
+Route::get('/cart/items', [FrontendController::class, 'getCartItems'])->name('cart.items');
+// Route::post('/cart/remove/{id}', [FrontendController::class, 'removeCartItem'])->name('cart.remove');
+// Route::post('/cart/remove/{id}', [FrontendController::class, 'removeCartItem']);
+Route::post('/cart/remove/{id}', [FrontendController::class, 'removeCartItem'])->name('cart.remove');
 Route::middleware('auth')->group(function () {
 
     Route::get('checkout', action: [FrontendController::class,'Checkout'])->name('checkout');
     Route::get('profile', action: [FrontendController::class,'Profile'])->name('profile');
 
-    Route::post('toggle-wishlist/{id}', [FrontendController::class, 'toggleWishlist']);
-    Route::post('/toggle-wishlists/{id}', [FrontendController::class, 'toggleWishlist'])->name('toggle.wishlist');
-    Route::get('/wishlist/data', [FrontendController::class, 'wishlistData'])->name('wishlist.data');
-    Route::post('/address/update/{id}', [FrontendController::class, 'updateAddress'])->name('address.update');
-
     Route::post('/change-password', [AuthController::class, 'changePassword'])->name('change.password');
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-    Route::get('/cart/items', [FrontendController::class, 'getCartItems'])->name('cart.items');
-    Route::post('/cart/remove/{id}', [FrontendController::class, 'removeCartItem']);
     Route::post('/cart/update/{id}', [FrontendController::class, 'updateCartItem'])->name('cart.update');
-    Route::post('/cart/remove/{id}', [FrontendController::class, 'removeCartItem'])->name('cart.remove');
     Route::post('/cart/apply-discount', [FrontendController::class, 'applyDiscount'])->name('cart.applyDiscount');
     Route::post('/address/store', [FrontendController::class, 'storeAddress'])->name('address.store');
-    Route::get('cart', action: [FrontendController::class,'Cart'])->name('cart');
+    Route::delete('/address/{id}', [FrontendController::class, 'Addressdestroy'])->name('address.delete');
 
     Route::post('/cod/order', [FrontendController::class, 'placeCodOrder'])->name('cod.order');
     Route::post('/razorpay/verify-payment', [FrontendController::class, 'verifyRazorpayPayment'])->name('razorpay.verifyPayment');
@@ -62,7 +63,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/profile-update/{id}', [AuthController::class, 'update'])->name('profile.update');
 
 });
-    Route::post('/add-to-cart/{id}', [FrontendController::class, 'addToCart'])->name('cart.add');
+Route::post('/add-to-cart/{id}', [FrontendController::class, 'addToCart'])->name('cart.add');
 
 Route::get('/admin-login', [AdminController::class,'Login'])->name('adminlogin');
 Route::post('/login', [AdminController::class, 'LoginCheck'])->name('login.submit');

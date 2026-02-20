@@ -82,20 +82,21 @@
                     <p class="text-muted">Subtotal</p>
                     <span>₹00.00</span>
                 </div>
-                <div class="yp-summary-line gst">
+                {{-- <div class="yp-summary-line gst">
                     <p class="text-muted">GST (18 %)</p>
                     <span class="text-success fw-bold">18 %</span>
-                </div>
+                </div> --}}
                 <div class="yp-summary-line delivery">
                     <p class="text-muted">Standard Delivery</p>
                     <span class="text-success fw-bold">FREE</span>
                 </div>
-
-                <div class="yp-promo-box d-flex align-items-center justify-content-between mt-4">
-                    <input type="text" class="yp-promo-input" placeholder="DISCOUNT CODE">
-                    <button class="btn btn-sm btn-dark rounded-pill px-3 py-1 fw-bold"
-                        style="font-size: 0.7rem;">APPLY</button>
-                </div>
+                @auth    
+                    <div class="yp-promo-box d-flex align-items-center justify-content-between mt-4">
+                        <input type="text" class="yp-promo-input" placeholder="DISCOUNT CODE">
+                        <button class="btn btn-sm btn-dark rounded-pill px-3 py-1 fw-bold"
+                            style="font-size: 0.7rem;">APPLY</button>
+                    </div>
+                @endauth
 
                 <div class="yp-summary-line total  yp-summary-total">
                     <p>Total Amount</p>

@@ -10,6 +10,7 @@
             <div class="col-lg-8">
                 <div class="yp-checkout-section shadow-sm">
                     <div class="yp-section-title"><i class="bi bi-geo-alt-fill"></i> Delivery Address</div>
+                    @if($user_delivery_address)
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="yp-address-card active">
@@ -24,13 +25,14 @@
                             </label>
                         </div>
                     </div>
+                    @endif
                     {{-- <button class="btn btn-link text-calor fw-bold text-decoration-none p-0 mt-3 small"
                         data-bs-toggle="modal" data-bs-target="#addAddressModal">
                         + Change Address
                     </button> --}}
-                    <a href="{{ route('profile') }}"
+                    <a href="{{ route('profile') }}?tab=address"
                         class="btn btn-link text-calor fw-bold text-decoration-none p-0 mt-3 small">
-                        + Change Address
+                        + Add Address
                     </a>
                 </div>
 
@@ -83,8 +85,29 @@
                         <!-- <span class="fw-bold text-decoration-line-through text-muted small me-2">₹729.00</span> -->
                         <span class="fw-bold">₹{{ number_format($subtotal, 2) }}</span>
                     </div>
+                    @if($cgst)
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">CGST  </span>
+                            <!-- <span class="fw-bold text-decoration-line-through text-muted small me-2">₹729.00</span> -->
+                            <span class="fw-bold">₹{{ number_format($cgst, 2) }}</span>
+                        </div>
+                    @endif
+                    @if($sgst)
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">SGST  </span>
+                            <!-- <span class="fw-bold text-decoration-line-through text-muted small me-2">₹729.00</span> -->
+                            <span class="fw-bold">₹{{ number_format($sgst, 2) }}</span>
+                        </div>
+                    @endif
+                    @if($igst)
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">IGST  </span>
+                            <!-- <span class="fw-bold text-decoration-line-through text-muted small me-2">₹729.00</span> -->
+                            <span class="fw-bold">₹{{ number_format($igst, 2) }}</span>
+                        </div>
+                    @endif
                     <div class="d-flex justify-content-between mb-2">
-                        <span class="text-muted">GST (18 %) </span>
+                        <span class="text-muted">Total GST  </span>
                         <!-- <span class="fw-bold text-decoration-line-through text-muted small me-2">₹729.00</span> -->
                         <span class="fw-bold">₹{{ number_format($gst_total, 2) }}</span>
                     </div>

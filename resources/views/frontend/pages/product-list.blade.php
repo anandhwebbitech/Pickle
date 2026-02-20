@@ -110,10 +110,11 @@
                                     $mainImage = $images[0] ?? $defaultImage;
                                     $hoverImage = $images[1] ?? $defaultImage;
                                 @endphp
+                                <a href="{{ route('product-details', $product->id) }}">
 
                                     <!-- Product Image -->
                                     <img src="{{ asset('public/uploads/products/' . $mainImage) }}" class="img-main">
-                                    <img src="{{ asset('public/uploads/products/' . $hoverImage) }}" class="img-hover">
+                                    <img src="{{ asset('public/uploads/products/' . $hoverImage) }}" class="img-hover"></a>
 
                                     <div class="view-overlay">
                                         <a href="{{ route('product-details', $product->id) }}"
@@ -122,8 +123,9 @@
                                         </a>
                                     </div>
                                 </div>
-
-                                <h6 class="fw-bold mb-1">{{ $product->name }}</h6>
+                                <a href="{{ route('product-details', $product->id) }}">
+                                
+                                <h6 class="fw-bold mb-1">{{ $product->name }}</h6></a>
 
                                 <p class="text-muted small mb-3">
                                     {{ $product->short_description ?? 'Delicious & Traditional' }}

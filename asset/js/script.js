@@ -31,8 +31,7 @@ function calculateGrand() {
   let sum = 0;
   totals.forEach((t) => (sum += parseInt(t.innerText)));
   document.getElementById("grandTotal").innerText = sum;
-  let count = totals.length > 0 ? totals.length : 0;
-  document.querySelector(".cart-count").innerText = count;
+  document.querySelector(".cart-count").innerText = totals.length;
   if (totals.length === 0) {
    document.querySelector(".cart-count").innerText = 0;
 
@@ -56,7 +55,7 @@ function addToCart(name, price, imageSrc) {
                             <span class="qty fw-bold mx-2">1</span>
                             <span class="btn-plus p-1" style="cursor:pointer;">+</span>
                         </div>
-                        <div class="fw-bold text-calor">₹<span class="item-total">${price}</span></div>
+                        <div class="fw-bold text-calor">â‚¹<span class="item-total">${price}</span></div>
                     </div>
                 </div>
                 <button class="btn btn-sm text-muted btn-remove ms-2"><i class="bi bi-x-circle-fill fs-5"></i></button>
@@ -133,7 +132,7 @@ document.addEventListener("DOMContentLoaded", function () {
     slidesPerView: 1, // Mobile
     spaceBetween: 25,
     loop: true, // Infinite Loop
-    autoplay: { delay: 3500, disableOnInteraction: false },
+    autoplay: { delay: 3500, disableOnInteraction: false,pauseOnMouseEnter: true },
     navigation: {
       nextEl: "#p-next",
       prevEl: "#p-prev",
@@ -220,7 +219,7 @@ function toggleSave(btn) {
         icon.classList.remove("bi-heart-fill", "text-danger");
         icon.classList.add("bi-heart");
 
-        // 🔥 Reload wishlist page items
+        // ðŸ”¥ Reload wishlist page items
         if (document.getElementById("wishlist-container")) {
           loadWishlist();
         }
@@ -428,13 +427,13 @@ function handlePayments() {
 
 //         if (data.status) {
 
-//             // ✅ Update cart badge
+//             // âœ… Update cart badge
 //             let badge = document.querySelector(".cart-link .badge");
 //             if (badge) {
 //                 badge.innerText = data.count;
 //             }
 
-//             // ✅ Button animation
+//             // âœ… Button animation
 //             const originalText = btn.innerHTML;
 
 //             btn.innerHTML = `<i class="bi bi-check-circle me-2"></i>Added`;
@@ -495,7 +494,7 @@ function handleCartClick(btn) {
   })
     .then(res => res.json())
     .then(data => {
-      // 🔥 If login required → redirect
+      // ðŸ”¥ If login required â†’ redirect
       if (data.redirect) {
         window.location.href = data.redirect;
         return;
@@ -505,7 +504,7 @@ function handleCartClick(btn) {
         let badge = document.querySelector(".cart-link .badge");
         if (badge) badge.innerText = data.count;
           loadNavbarCart();
-        btn.innerHTML = "Added ✓";
+        btn.innerHTML = "Added âœ“";
         btn.classList.remove("btn-dark");
         btn.classList.add("btn-success");
 
@@ -525,4 +524,20 @@ function handleCartClick(btn) {
       alert("Server error");
     });
 }
+function copyToClipboard(text, element) {
+    // Copy the text
+    navigator.clipboard.writeText(text).then(() => {
+        // Change UI to show success
+        const originalHint = element.querySelector('.copy-hint').innerText;
+        element.classList.add('copied');
+        element.querySelector('.copy-hint').innerText = 'Copied!';
 
+        // Revert back after 2 seconds
+        setTimeout(() => {
+            element.classList.remove('copied');
+            element.querySelector('.copy-hint').innerText = originalHint;
+        }, 2000);
+    }).catch(err => {
+        console.error('Failed to copy: - script.js:544', err);
+    });
+}

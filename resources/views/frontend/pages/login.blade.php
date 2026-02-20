@@ -17,7 +17,7 @@
             <div class="mb-3">
                 <div class="d-flex justify-content-between">
                     <label class="form-label">Password</label>
-                    <a href="#" class="signup-link small">Forgot?</a>
+                    {{-- <a href="#" class="signup-link small">Forgot?</a> --}}
                 </div>
                 <div class="password-field-container">
                     <input type="password" name="password" id="passwordInput"

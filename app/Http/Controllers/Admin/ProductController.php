@@ -31,7 +31,7 @@ class ProductController extends Controller
             $products = Product::with(['category'])->latest();
 
             return DataTables::of($products)
-
+                ->addIndexColumn()
                 ->addColumn('image', function ($row) {
 
                     $image = $row->image;
@@ -129,6 +129,7 @@ class ProductController extends Controller
                 'contains'    => $request->contains ? json_encode($request->contains) : null,
                 'image'       => json_encode($imagePaths),
                 'status'      => 1,
+                'south_indian' => $request->south_indian ?? 0,
             ]);
 
             // 4️⃣ Store weight & price as JSON in products table
@@ -229,6 +230,7 @@ class ProductController extends Controller
         }
 
         $data['deals'] = $request->deals ? 1 : 0;
+        $data['south_indian'] = $request->south_indian ? 1 : 0;
         $data['weight'] = json_encode($request->weights ?? []);
         $data['contains'] = json_encode($request->contains ?? []);
 

@@ -32,6 +32,14 @@
                         <i class="bi bi-eye password-toggle-icon" id="toggleRegPassword"></i>
                     </div>
                 </div>
+                <div class="col-md-12">
+                    <label class="form-label">Confirm Password</label>
+                    <div class="password-field-container">
+                        <input type="password" name="password_confirmation" id="regConfirmPassword"
+                            class="form-control" placeholder="Re-enter password" style="padding-right: 45px;">
+                        <i class="bi bi-eye password-toggle-icon" id="toggleConfirmPassword"></i>
+                    </div>
+                </div>
 
             </div>
 
@@ -61,7 +69,16 @@ toggleRegPassword.addEventListener('click', function () {
     this.classList.toggle('bi-eye-slash');
 });
 
+// re-Password Toggle
+const toggleConfirmPassword = document.querySelector('#toggleConfirmPassword');
+const regConfirmPassword = document.querySelector('#regConfirmPassword');
 
+toggleConfirmPassword.addEventListener('click', function () {
+    const type = regConfirmPassword.getAttribute('type') === 'password' ? 'text' : 'password';
+    regConfirmPassword.setAttribute('type', type);
+    this.classList.toggle('bi-eye');
+    this.classList.toggle('bi-eye-slash');
+});
 // AJAX Signup
 $('#signupForm').on('submit', function(e) {
     e.preventDefault();

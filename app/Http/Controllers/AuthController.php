@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Cart;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
@@ -17,7 +18,7 @@ class AuthController extends Controller
             'name'     => 'required|string|max:255',
             'email'    => 'required|email|unique:users,email',
             'phone'    => 'required|digits_between:10,15|unique:users,phone',
-            'password' => 'required|min:8',
+            'password' => 'required|min:8|confirmed',
         ]);
 
         if ($validator->fails()) {
@@ -26,18 +27,19 @@ class AuthController extends Controller
             ], 422);
         }
 
-        User::create([
+        $user = User::create([
             'name'     => $request->name,
             'email'    => $request->email,
             'phone'    => $request->phone,
             'password' => Hash::make($request->password),
+            'role'     => 2,
         ]);
-
+        Auth::login($user);
         return response()->json([
             'message' => 'Account created successfully!'
         ]);
     }
-    public function login(Request $request)
+    public function login1(Request $request)
     {
         $request->validate([
             'email' => 'required|email',
@@ -53,6 +55,98 @@ class AuthController extends Controller
                 'status' => true,
                 'message' => 'Login successful!',
                 'redirect' => route('home') // change if needed
+            ]);
+        }
+
+        return response()->json([
+            'status' => false,
+            'message' => 'Invalid email or password'
+        ]);
+    }
+    public function login(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required'
+        ]);
+
+        // First check if user exists
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Invalid email or password'
+            ]);
+        }
+
+        // 🚫 Block users with role = 1
+        if ($user->role == 1) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Invalid email or password'
+            ]);
+        }
+
+        // Attempt login
+        if (Auth::attempt([
+            'email' => $request->email,
+            'password' => $request->password
+        ])) {
+            $user = Auth::user();
+
+            // ✅ Merge guest wishlist after login
+            if (session()->has('guest_wishlist')) {
+
+                $guestWishlist = session()->get('guest_wishlist', []);
+                $userKey = 'wishlist_' . $user->id;
+
+                $userWishlist = session()->get($userKey, []);
+
+                $mergedWishlist = $userWishlist + $guestWishlist;
+
+                session()->put($userKey, $mergedWishlist);
+                session()->forget('guest_wishlist');
+            }
+            // 🔥 MOVE GUEST CART TO DATABASE
+            if (session()->has('guest_cart')) {
+
+                $guestCart = session()->get('guest_cart');
+
+                foreach ($guestCart as $item) {
+
+                    $existingCart = Cart::where('user_id', $user->id)
+                        ->where('product_id', $item['product_id'])
+                        ->where('weight', $item['weight'])
+                        ->first();
+
+                    if ($existingCart) {
+                        $existingCart->quantity += $item['quantity'];
+                        $existingCart->total_amount = $existingCart->quantity * $existingCart->price;
+                        $existingCart->save();
+                    } else {
+                        Cart::create([
+                            'user_id'      => $user->id,
+                            'product_id'   => $item['product_id'],
+                            'category_id'  => $item['category_id'],
+                            'quantity'     => $item['quantity'],
+                            'weight'       => $item['weight'],
+                            'price'        => $item['price'],
+                            'discount'     => 0,
+                            'total_amount' => $item['price'] * $item['quantity'],
+                            'status'       => 1
+                        ]);
+                    }
+                }
+
+                session()->forget('guest_cart');
+            }
+
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Login successful!',
+                'redirect' => route('home')
             ]);
         }
 
@@ -104,7 +198,7 @@ class AuthController extends Controller
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-        
+
         if ($role == 1) {
             return redirect()->route('adminlogin');
         }
@@ -126,5 +220,21 @@ class AuthController extends Controller
             'user' => $user
         ]);
     }
+    protected function authenticated(Request $request, $user)
+    {
+        if (session()->has('guest_wishlist')) {
 
+            $guestWishlist = session()->get('guest_wishlist', []);
+            $userKey = 'wishlist_' . $user->id;
+
+            $userWishlist = session()->get($userKey, []);
+
+            // Merge guest + user wishlist
+            $mergedWishlist = $userWishlist + $guestWishlist;
+
+            session()->put($userKey, $mergedWishlist);
+
+            session()->forget('guest_wishlist');
+        }
+    }
 }

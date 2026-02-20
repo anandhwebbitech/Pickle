@@ -33,7 +33,7 @@ a {
 }
 
 .main-nav-container {
-    background: #5e0e3cb8;
+    background: #5E0E3C;
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(15px);
     border: 1px solid rgb(248 245 236 / 84%);
@@ -91,7 +91,7 @@ a {
     background: #f7f4ebbd !important;
     color: #5E0E3C !important;
     border-radius: 50px;
-    padding: 8px 22px !important;
+    padding: 8px 10px !important;
     border: none;
 }
 
@@ -146,7 +146,7 @@ a {
     background: #2b2b2b;
     color: #ffffff;
     border-radius: 50px;
-    padding: 5px 15px;
+    padding: 10px 15px;
     font-size: 0.85rem;
 }
 
@@ -210,7 +210,7 @@ a {
 /* Footer */
 /* --- PILL-STYLE FOOTER DESIGN --- */
 .footer-pill-container {
-    background: #5e0e3cb8;
+    background: #5E0E3C;
     backdrop-filter: blur(15px);
     -webkit-backdrop-filter: blur(15px);
     border: 1px solid rgb(248 245 236 / 84%);
@@ -475,8 +475,8 @@ a {
 .btn-yummy-outline-sm {
     display: inline-block;
     padding: 8px 20px;
-    border: 1.5px solid #5E0E3C;
-    color: #5E0E3C;
+    border: 1.5px solid #7e1434;
+    color: #7e1434;
     text-decoration: none;
     border-radius: 50px;
     font-size: 0.85rem;
@@ -1993,4 +1993,236 @@ body {
 
 .badge-calor {
     background-color: #5E0E3C;
+}
+
+
+
+
+.yummy-bento-card {
+    position: relative;
+    overflow: hidden;
+}
+
+.card-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #9c9c9cc7;
+    z-index: 1;
+}
+
+.promo-content {
+    position: relative;
+    z-index: 2;
+    color: #fff; /* makes text visible on dark overlay */
+}
+
+.pic-font {
+    font-size: larger;
+}
+
+
+/* promo section */
+/* --- COLORS & BASE --- */
+.bento-beige {
+    background-color: #f7f3e9;
+    border: 1px solid #ede4d1;
+}
+
+.bento-grey {
+    background-color: #f0f2f5;
+    border: 1px solid #e2e5e9;
+}
+
+/* Red Gradient matching your layout image */
+.bento-main-red {
+    background: linear-gradient(135deg, #5E0E3C 0%, #5E0E3C 100%);
+    border: none;
+    min-height: 500px !important;
+    /* Extra height for the big image */
+}
+
+.yummy-bento-card {
+    position: relative;
+    border-radius: 40px;
+    /* Consistent with your website */
+    padding: 50px 40px;
+    height: 100%;
+    min-height: 280px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    /* Keeps text at top so image fits at bottom */
+    align-items: center;
+    overflow: hidden;
+    transition: all 0.4s ease;
+    /* border: dashed 1px #5E0E3C; */
+}
+
+.yummy-bento-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+}
+
+
+
+/* The Inner Box Container */
+.promo-bg {
+    background-color: #5E0E3C;
+}
+.promo-inner-container {
+    background: #fffafa;
+    border: 1px solid #5e0e3b62;
+    padding: 15px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    display: inline-block;
+    width: 100%;
+    max-width: 100%;
+}
+
+.promo-inner-container:hover {
+    background: #fdf2f3;
+    transform: scale(1.02);
+    border-color: #5E0E3C;
+}
+
+.promo-code-dashed {
+    display: block;
+    font-weight: 800;
+    font-size: 1.4rem;
+    color: #5E0E3C;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+.copy-hint {
+    display: block;
+    font-size: 10px;
+    color: #5E0E3C;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin-top: 5px;
+    opacity: 0.6;
+}
+
+/* Success State after copying */
+.promo-inner-container.copied {
+    background: #5E0E3C !important;
+}
+
+.promo-inner-container.copied .promo-code-dashed,
+.promo-inner-container.copied .copy-hint {
+    color: #ffffff !important;
+}
+
+/* Optional: Subtle hover effect for the promo box */
+.bento-promo-white:hover .promo-code-dashed {
+    background: #5E0E3C;
+    color: #ffffff;
+    transition: 0.3s ease;
+}
+
+/* Styling for the New Launch Card */
+.bento-asset-bottom-large {
+    position: absolute;
+    bottom: -15px;
+    /* Slight overflow for a 3D effect */
+    left: 50%;
+    transform: translateX(-50%);
+    height: 75%;
+    /* Makes the image the star of the card */
+    width: auto;
+    object-fit: contain;
+    z-index: 1;
+    transition: transform 0.5s ease;
+}
+
+/* Hover effect to make the image "pop" */
+.yummy-bento-card:hover .bento-asset-bottom-large {
+    transform: translateX(-50%) scale(1.1);
+}
+
+/* Helper to make the entire card clickable */
+.stretched-link::after {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 10;
+    content: "";
+}
+
+/* --- CENTERED TEXT ELEMENTS --- */
+.promo-content {
+    z-index: 5;
+    width: 100%;
+    position: relative;
+}
+
+.badge-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    font-weight: 800;
+    letter-spacing: 1px;
+    padding: 6px 16px;
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 50px;
+    display: inline-block;
+}
+
+.btn-yummy-outline-sm {
+    display: inline-block;
+    padding: 8px 20px;
+    border: 1.5px solid #7e1434;
+    color: #7e1434;
+    text-decoration: none;
+    border-radius: 50px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    transition: 0.3s;
+}
+
+.btn-yummy-outline-sm:hover {
+    background: #5E0E3C;
+    color: #fff;
+}
+
+/* --- IMAGE POSITIONING --- */
+.bento-asset-bottom {
+    position: absolute;
+    bottom: -10px;
+    left: 2px;
+    height: 70%;
+    /* Smaller for stacked cards */
+    width: auto;
+    object-fit: contain;
+    z-index: 1;
+    transition: 0.5s ease;
+}
+
+.bento-asset-center {
+    position: absolute;
+    bottom: -20px;
+    height: 80%;
+    /* Larger for featured card */
+    width: auto;
+    object-fit: contain;
+    z-index: 1;
+    transition: 0.5s ease;
+}
+
+.yummy-bento-card:hover img {
+    transform: scale(1.1) translateY(-5px);
+}
+
+@media (max-width: 991px) {
+    .bento-main-red {
+        min-height: 450px !important;
+    }
 }
