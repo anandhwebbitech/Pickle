@@ -24,9 +24,12 @@ Route::post('/login-ajax', [AuthController::class, 'login'])->name(name: 'login.
 Route::get('product-details/{id}', action: [FrontendController::class,'ProductDetails'])->name('product-details');
 Route::get('/cart/navbar', [FrontendController::class, 'navbarCart'])->name('cart.navbar');
 Route::post('/signup-store', [AuthController::class, 'store'])->name('signup.store');
+
+
 Route::get('opt', action: [FrontendController::class,'OTP'])->name('otp');
 Route::post('verify-otp', [AuthController::class,'verifyOtp'])->name('verify.otp');
 Route::post('/resend-otp', [AuthController::class, 'resendOtp'])->name('resend.otp');
+
 // Route::get('product-details/{id}', action: [FrontendController::class,'ProductDetails'])->name('product-details');
 // Route::get('/product/{id}', [FrontendController::class, 'ProductShow'])->name('product.show');
 // AUTH
@@ -36,17 +39,22 @@ Route::get('/wishlist/data', [FrontendController::class, 'wishlistData'])->name(
 Route::post('/address/update/{id}', [FrontendController::class, 'updateAddress'])->name('address.update');
 Route::get('cart', action: [FrontendController::class,'Cart'])->name('cart');
 Route::get('/cart/items', [FrontendController::class, 'getCartItems'])->name('cart.items');
-// Route::post('/cart/remove/{id}', [FrontendController::class, 'removeCartItem'])->name('cart.remove');
-// Route::post('/cart/remove/{id}', [FrontendController::class, 'removeCartItem']);
 Route::post('/cart/remove/{id}', [FrontendController::class, 'removeCartItem'])->name('cart.remove');
+Route::post('/cart/update/{id}', [FrontendController::class, 'updateCartItem'])->name('cart.update');
+
+Route::get('/forgot-password', [AuthController::class, 'forgotPassword'])->name('forgot.password');
+Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->name('forgot.password.send');
+Route::get('/reset-password/{token}', [AuthController::class, 'showResetForm'])->name('password.reset');
+Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.update');
 Route::middleware('auth')->group(function () {
 
     Route::get('checkout', action: [FrontendController::class,'Checkout'])->name('checkout');
     Route::get('profile', action: [FrontendController::class,'Profile'])->name('profile');
 
+
+
     Route::post('/change-password', [AuthController::class, 'changePassword'])->name('change.password');
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-    Route::post('/cart/update/{id}', [FrontendController::class, 'updateCartItem'])->name('cart.update');
     Route::post('/cart/apply-discount', [FrontendController::class, 'applyDiscount'])->name('cart.applyDiscount');
     Route::post('/address/store', [FrontendController::class, 'storeAddress'])->name('address.store');
     Route::delete('/address/{id}', [FrontendController::class, 'Addressdestroy'])->name('address.delete');

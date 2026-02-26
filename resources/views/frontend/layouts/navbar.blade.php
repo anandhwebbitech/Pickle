@@ -206,11 +206,14 @@
         
     </div>
     <div class="p-4 border-top">
-            <div class="d-flex justify-content-between mb-4">
+              
+            <div id="subtotalSection"
+                class="subtotal-section d-flex justify-content-between mb-4 d-none">
                 <span class="text-muted">Subtotal Amount</span>
-                <span class="fw-bold fs-4">₹<span id="cartGrandTotal">000</span></span>
+                <span class="fw-bold fs-4">
+                    ₹<span id="cartGrandTotal">0.00</span>
+                </span>
             </div>
-
         {{-- <a href="{{route('checkout')}}" class="btn butn-calor w-100 py-3 fw-bold rounded-pill">Proceed to Checkout</a>
         <div class="my-3 text-center">
             <a href="{{route('cart')}}">Go to Cart</a>

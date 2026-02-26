@@ -5,11 +5,13 @@
 
                 <div class="col-lg-4">
                     <div class="mb-4">
-                        <a href="{{ route("home") }}"><img src="{{ asset('asset/img/anni-logo.png') }}"  alt="Yummy Pickle" style="width: 100px;" class="mb-2"></a>
+                        <a href="{{ route("home") }}"><img src="{{ asset('asset/img/anni-logo.png') }}"
+                                alt="Yummy Pickle" style="width: 100px;" class="mb-2"></a>
                         <h5 class="fw-bold mb-0 text-ylo">Yummy Pickle</h5>
                     </div>
                     <p class="text-ylo small lh-lg">
-                        At UV Food Products, we believe that quality is the foundation of trust. That’s why we are dedicated to producing and delivering the purest and most authentic cold-pressed oils.
+                        At UV Food Products, we believe that quality is the foundation of trust. That’s why we are
+                        dedicated to producing and delivering the purest and most authentic cold-pressed oils.
                     </p>
                     <div class="d-flex gap-2 mt-4 mb-4">
                         <a href="#" class="footer-social-circle"><i class="bi bi-facebook"></i></a>
@@ -23,11 +25,16 @@
                 <div class="col-lg-3 col-md-6">
                     <h6 class="fw-bold mb-4 text-uppercase text-ylo" style="letter-spacing: 1px;">Quick Links</h6>
                     <div class="d-flex flex-column">
-                        <a href="{{route('about')}}" class="footer-link"><i class="bi bi-chevron-right small" style="color:white;"></i> About Us</a>
-                        <a href="{{ route('contact') }}" class="footer-link"><i class="bi bi-chevron-right small" style="color:white;"></i> Contact Us</a>
-                        <a href="{{route('terms')}}" class="footer-link"><i class="bi bi-chevron-right small" style="color:white;"></i> Terms & Conditions</a>
-                        <a href="{{route('private_Policy')}}" class="footer-link"><i class="bi bi-chevron-right small" style="color:white;"></i> Privacy Policy</a>
-                        <a href="{{route('shipping_policy')}}" class="footer-link"><i class="bi bi-chevron-right small" style="color:white;"></i> Shipping & Delivery</a>
+                        <a href="{{route('about')}}" class="footer-link"><i class="bi bi-chevron-right small"
+                                style="color:white;"></i> About Us</a>
+                        <a href="{{ route('contact') }}" class="footer-link"><i class="bi bi-chevron-right small"
+                                style="color:white;"></i> Contact Us</a>
+                        <a href="{{route('terms')}}" class="footer-link"><i class="bi bi-chevron-right small"
+                                style="color:white;"></i> Terms & Conditions</a>
+                        <a href="{{route('private_Policy')}}" class="footer-link"><i class="bi bi-chevron-right small"
+                                style="color:white;"></i> Privacy Policy</a>
+                        <a href="{{route('shipping_policy')}}" class="footer-link"><i class="bi bi-chevron-right small"
+                                style="color:white;"></i> Shipping & Delivery</a>
                     </div>
                 </div>
 
@@ -58,7 +65,8 @@
 
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
                 <p class="small text-ylo mb-0">
-                    2026 Copyright By <strong>Anni's Kitchen Products</strong> Powered By <a href="https://webbitech.com/" style="color:white;">Webbitech</a>
+                    2026 Copyright By <strong>Anni's Kitchen Products</strong> Powered By <a
+                        href="https://webbitech.com/" style="color:white;">Webbitech</a>
                 </p>
                 <div class="d-flex align-items-center gap-2 opacity-75">
                     <img src="{{ asset('asset/img/visa.png') }}" height="60" alt="Visa">
@@ -80,91 +88,105 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
+
+    document.addEventListener("DOMContentLoaded", function () {
         loadNavbarCart();
+        const subtotalSection = document.querySelector('.subtotal-section');
+        if (subtotalSection) {
+            subtotalSection.style.display = "none"; // hide initially
+        }
     });
     function loadNavbarCart() {
 
-    fetch("{{ route('cart.navbar') }}")
-        .then(res => res.json())
-        .then(data => {
+        fetch("{{ route('cart.navbar') }}")
+            .then(res => res.json())
+            .then(data => {
 
-            if (data.status) {
+                if (!data.status) return;
 
                 // Update cart items
                 const cartBody = document.getElementById("cartBody");
                 if (cartBody) {
                     cartBody.innerHTML = data.html;
                 }
-                // Update subtotal
+
+                // Update total
                 const totalElement = document.getElementById("cartGrandTotal");
                 if (totalElement) {
                     totalElement.innerText = data.total;
                 }
+
+                // Update badge count
                 const totalCount = document.getElementById("cart-count");
                 if (totalCount) {
                     totalCount.innerText = data.cartcount;
                 }
-                else{
-                    totalCount.innerText =0
+
+                // 🔥 SHOW / HIDE SUBTOTAL PROPERLY
+                const subtotalSection = document.getElementById("subtotalSection");
+
+                if (subtotalSection) {
+                    if (data.cartcount > 0) {
+                        subtotalSection.classList.remove("d-none");
+                    } else {
+                        subtotalSection.classList.add("d-none");
+                    }
                 }
 
-            }
+            })
+            .catch(err => {
+                console.error("Navbar Cart Error:", err);
+            });
+    }
+    function updateQtyNav(el, cartId, change) {
 
+        fetch("{{ route('cart.update', ':id') }}".replace(':id', cartId), {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                "Accept": "application/json"
+            },
+            body: JSON.stringify({
+                change: change
+            })
         })
-        .catch(err => {
-            console.error("Navbar Cart Error:", err);
-        });
-}
-function updateQtyNav(el, cartId, change) {
+            .then(res => res.json())
+            .then(data => {
+                console.log(data.status);
+                if (data.status) {
+                    loadNavbarCart(); // reload full cart from backend
+                }
 
-    fetch("{{ route('cart.update', ':id') }}".replace(':id', cartId), {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "X-CSRF-TOKEN": "{{ csrf_token() }}",
-            "Accept": "application/json"
-        },
-        body: JSON.stringify({
-            change: change
-        })
-    })
-    .then(res => res.json())
-    .then(data => {
-        console.log(data.status);
-        if (data.status) {
-            loadNavbarCart(); // reload full cart from backend
-        }
+            })
+            .catch(err => console.error(err));
+        // loadNavbarCart(); 
+    }
+    $(document).on('click', '.nav-cart-remove', function () {
 
-    })
-    .catch(err => console.error(err));
-    // loadNavbarCart(); 
-}
-$(document).on('click', '.nav-cart-remove', function () {
+        let id = $(this).data('id');
 
-    let id = $(this).data('id');
-
-    $.ajax({
-        url: "{{ route('cart.remove', ':id') }}".replace(':id', id),
-        method: "POST",
-        data: {
-            _token: "{{ csrf_token() }}"
-        },
-        success: function (res) {
-            if (res.status) {
+        $.ajax({
+            url: "{{ route('cart.remove', ':id') }}".replace(':id', id),
+            method: "POST",
+            data: {
+                _token: "{{ csrf_token() }}"
+            },
+            success: function (res) {
+                if (res.status) {
+                    loadNavbarCart();
+                }
                 loadNavbarCart();
+            },
+            error: function (err) {
+                console.log(err);
             }
-            loadNavbarCart();
-        },
-        error: function (err) {
-            console.log(err);
-        }
-        
+
+        });
+
     });
 
-});
-
-document.getElementById('productSearch').addEventListener('keyup', function () {
+    document.getElementById('productSearch').addEventListener('keyup', function () {
 
         let keyword = this.value;
         let resultBox = document.getElementById('searchResults');

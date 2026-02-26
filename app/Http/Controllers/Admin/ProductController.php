@@ -315,7 +315,7 @@ class ProductController extends Controller
                 ->addColumn('action', function ($row) {
 
                     $deliverBtn = '';
-                    if (in_array($row->status, [0, 1, 4])) {
+                    if (in_array($row->status, [0, 1, 4, 5])) {
                         $deliverBtn = '
                             <button class="btn btn-sm btn-success deliverBtn"
                                     data-id="' . $row->id . '"

@@ -17,7 +17,9 @@
             <div class="mb-3">
                 <div class="d-flex justify-content-between">
                     <label class="form-label">Password</label>
-                    {{-- <a href="#" class="signup-link small">Forgot?</a> --}}
+                    <a href="{{ route('forgot.password') }}" class="signup-link small">
+                        Forgot?
+                    </a>
                 </div>
                 <div class="password-field-container">
                     <input type="password" name="password" id="passwordInput"
@@ -31,10 +33,10 @@
 
         <div class="divider">OR</div>
 
-        {{-- <a href="#" class="btn btn-outline-secondary w-100 rounded-pill py-2 small d-flex align-items-center justify-content-center gap-2 border-light-subtle">
-            <img src="https://cdn-icons-png.flaticon.com/512/300/300221.png" width="16">
-            <span class="text-dark">Continue with Google</span>
-        </a> --}}
+        <!--<a href="#" class="btn btn-outline-secondary w-100 rounded-pill py-2 small d-flex align-items-center justify-content-center gap-2 border-light-subtle">-->
+        <!--    <img src="https://cdn-icons-png.flaticon.com/512/300/300221.png" width="16">-->
+        <!--    <span class="text-dark">Continue with Google</span>-->
+        <!--</a>-->
 
         <p class="text-center mt-4 mb-0 small text-muted">
             Don't have an account? <a href="{{ route('signup') }}" class="signup-link">Sign Up</a>

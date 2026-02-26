@@ -25,8 +25,8 @@ class FrontendController extends Controller
     public function Home()
     {
         $products = Product::where('status', 1)->get();
-        $treding_deals = Product::where('status', 1)->where('deals',1)->get();
-        $south_indian = Product::where('status', 1)->where('south_indian',1)->get();
+        $treding_deals = Product::where('status', 1)->where('deals', 1)->get();
+        $south_indian = Product::where('status', 1)->where('south_indian', 1)->get();
         $wishlistIds = [];
         $categories = Category::where('status', 1)->get();
         if (auth()->check()) {
@@ -43,7 +43,7 @@ class FrontendController extends Controller
 
         // Get only product IDs
         $wishlistIds = array_keys($wishlist);
-        return view('frontend.pages.index', compact('products', 'wishlistIds', 'categories','treding_deals','south_indian'));
+        return view('frontend.pages.index', compact('products', 'wishlistIds', 'categories', 'treding_deals', 'south_indian'));
     }
     public function About()
     {
@@ -149,6 +149,9 @@ class FrontendController extends Controller
     }
     public function Login()
     {
+        if (!session()->has('url.intended')) {
+            session(['url.intended' => url()->previous()]);
+        }
         return view('frontend.pages.login');
     }
     public function Signup()
@@ -325,14 +328,20 @@ class FrontendController extends Controller
     }
 
 
-    public function Profile()
+    public function Profile(Request $request)
     {
         $user = Auth::user(); // get logged-in user
 
         $addresses = UserAddress::where('user_id', $user->id)
             ->where('status', 1)
             ->get();
-        return view('frontend.pages.user-dashboard', compact('user', 'addresses'));
+        $fromCheckout = $request->from === 'checkout';
+
+        return view(
+            'frontend.pages.user-dashboard',
+            compact('user', 'addresses', 'fromCheckout')
+        );
+        // return view('frontend.pages.user-dashboard', compact('user', 'addresses'));
     }
     public function ProductDetails($id)
     {
@@ -1281,30 +1290,60 @@ class FrontendController extends Controller
     }
     public function updateCartItem(Request $request, $id)
     {
-        $cart = Cart::findOrFail($id);
+        $change = (int) $request->change;
 
-        if ($request->change > 0) {
-            $cart->increment('quantity', $request->change);
-        } else {
-            $cart->decrement('quantity', abs($request->change));
-        }
+        if (auth()->check()) {
+            $cart = Cart::findOrFail($id);
 
-        // Refresh model
-        $cart->refresh();
+            if ($request->change > 0) {
+                $cart->increment('quantity', $request->change);
+            } else {
+                $cart->decrement('quantity', abs($request->change));
+            }
 
-        if ($cart->quantity < 1) {
-            $cart->quantity = 1;
+            // Refresh model
+            $cart->refresh();
+
+            if ($cart->quantity < 1) {
+                $cart->quantity = 1;
+                $cart->save();
+            }
+
+            $cart->total_amount = $cart->quantity * $cart->price;
             $cart->save();
+
+            return response()->json([
+                'status' => true,
+                'quantity' => $cart->quantity,
+                'total' => $cart->total_amount
+            ]);
         }
+        $guestCart = session()->get('guest_cart', []);
 
-        $cart->total_amount = $cart->quantity * $cart->price;
-        $cart->save();
-
+    if (!isset($guestCart[$id])) {
         return response()->json([
-            'status' => true,
-            'quantity' => $cart->quantity,
-            'total' => $cart->total_amount
+            'status' => false,
+            'message' => 'Item not found in session cart'
         ]);
+    }
+
+    $newQty = $guestCart[$id]['quantity'] + $change;
+
+    if ($newQty < 1) {
+        $newQty = 1;
+    }
+
+    $guestCart[$id]['quantity'] = $newQty;
+
+    $itemTotal = $newQty * $guestCart[$id]['price'];
+
+    session()->put('guest_cart', $guestCart);
+
+    return response()->json([
+        'status' => true,
+        'quantity' => $newQty,
+        'total' => $itemTotal
+    ]);
     }
     // public function applyDiscount(Request $request)
     // {
@@ -1765,7 +1804,7 @@ class FrontendController extends Controller
         // ✅ EMPTY CART
         // ==========================================
         if ($cartItemsCount == 0) {
-            $html = '<div class="text-center py-4">Cart is empty 🛒</div>';
+            $html = '<div class="text-center text-white py-4">Cart is empty <i class="bi bi-cart-x-fill fs-1"  ></i></div>';
         }
 
         return response()->json([
@@ -1799,7 +1838,7 @@ class FrontendController extends Controller
             $orders = [];
             // You could store one row per cart item or create a single order with multiple items
             foreach ($cartItems as $item) {
-                $order =Order::create([
+                $order = Order::create([
                     'product_id'   => $item->product_id,
                     'cart_id'      => $item->id,
                     'user_id'      => $userId,
@@ -1821,7 +1860,7 @@ class FrontendController extends Controller
 
             // Clear cart after order
             Cart::where('user_id', $userId)->delete();
-             $data = [
+            $data = [
                 'fullname' => $user->name,
                 'email'    => $user->email,
                 'orders'   => $orders,
@@ -1969,8 +2008,8 @@ class FrontendController extends Controller
                 'status' => 1
             ]);
             $orders = Order::with('product')
-                    ->whereIn('id', $orderIds)
-                    ->get();
+                ->whereIn('id', $orderIds)
+                ->get();
 
             // ✅ Create payment row for EACH order
 
@@ -2090,30 +2129,67 @@ class FrontendController extends Controller
             ->rawColumns(['status', 'action'])
             ->make(true);
     }
-    public function cancelOrder($id)
+    public function cancelOrder(Request $request, $id)
     {
+        $request->validate([
+            'reason' => 'required|string|max:1000'
+        ]);
+
         $order = Order::where('id', $id)
             ->where('user_id', auth()->id())
             ->firstOrFail();
 
-        $order->status = 3; // cancelled
-        $order->save();
+        // Prevent duplicate cancel
+        if ($order->status == 3) { // 3 = cancelled
+            return response()->json([
+                'status' => false,
+                'message' => 'This order is already cancelled.'
+            ]);
+        }
+
+        // Optional: Prevent cancel if already delivered
+        if ($order->status == 4) { // example delivered status
+            return response()->json([
+                'status' => false,
+                'message' => 'Delivered orders cannot be cancelled.'
+            ]);
+        }
+
+        $order->update([
+            'status' => 3, // cancelled
+            'message' => $request->reason
+        ]);
 
         return response()->json([
+            'status' => true,
             'message' => 'Your order has been cancelled successfully.'
         ]);
     }
-
-    public function returnOrder($id)
+    public function returnOrder(Request $request, $id)
     {
+        $request->validate([
+            'reason' => 'required|string|max:1000'
+        ]);
+
         $order = Order::where('id', $id)
             ->where('user_id', auth()->id())
             ->firstOrFail();
 
-        $order->status = 4; // returned
-        $order->save();
+        // Prevent duplicate return
+        if ($order->status == 4) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Return already requested for this order.'
+            ]);
+        }
+
+        $order->update([
+            'status' => 4, // returned
+            'message' => $request->reason
+        ]);
 
         return response()->json([
+            'status' => true,
             'message' => 'Return request submitted successfully.'
         ]);
     }

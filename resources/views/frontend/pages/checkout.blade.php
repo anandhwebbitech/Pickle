@@ -11,26 +11,26 @@
                 <div class="yp-checkout-section shadow-sm">
                     <div class="yp-section-title"><i class="bi bi-geo-alt-fill"></i> Delivery Address</div>
                     @if($user_delivery_address)
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="yp-address-card active">
-                                <input type="radio" name="addr" checked>
-                                {{-- <span class="fw-bold d-block mb-1">Home</span> --}}
-                                <input type="radio" name="addr" value="{{ $user_delivery_address->id }}" checked>
-                                <small class="text-muted d-block">{{ $user_delivery_address->address }}</small>
-                                <small class="text-muted d-block">{{ $user_delivery_address->city }}</small>
-                                <small class="text-muted d-block">{{ $user_delivery_address->state }} -
-                                    {{ $user_delivery_address->pincode }}</small>
-                                <small class="fw-bold d-block mt-2">{{$user_delivery_address->mobile }}</small>
-                            </label>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="yp-address-card active">
+                                    <input type="radio" name="addr" checked>
+                                    {{-- <span class="fw-bold d-block mb-1">Home</span> --}}
+                                    <input type="radio" name="addr" value="{{ $user_delivery_address->id }}" checked>
+                                    <small class="text-muted d-block">{{ $user_delivery_address->address }}</small>
+                                    <small class="text-muted d-block">{{ $user_delivery_address->city }}</small>
+                                    <small class="text-muted d-block">{{ $user_delivery_address->state }} -
+                                        {{ $user_delivery_address->pincode }}</small>
+                                    <small class="fw-bold d-block mt-2">{{$user_delivery_address->mobile }}</small>
+                                </label>
+                            </div>
                         </div>
-                    </div>
                     @endif
                     {{-- <button class="btn btn-link text-calor fw-bold text-decoration-none p-0 mt-3 small"
                         data-bs-toggle="modal" data-bs-target="#addAddressModal">
                         + Change Address
                     </button> --}}
-                    <a href="{{ route('profile') }}?tab=address"
+                    <a href="{{ route('profile', ['from' => 'checkout', 'tab' => 'address']) }}"
                         class="btn btn-link text-calor fw-bold text-decoration-none p-0 mt-3 small">
                         + Add Address
                     </a>

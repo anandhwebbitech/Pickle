@@ -103,7 +103,7 @@
                         <a class="yp-nav-link" onclick="switchTab('password', this)"><i class="bi bi-key"></i> Change
                             Password</a>
                         <!-- <a href="login.php" class="yp-nav-link mt-4 text-muted border-top pt-3"><i
-                                                            class="bi bi-box-arrow-left"></i> Logout</a> -->
+                                                                    class="bi bi-box-arrow-left"></i> Logout</a> -->
                         <a href="{{ route('logout') }}"
                             onclick="event.preventDefault(); document.getElementById('logout-form').submit();"
                             class="yp-nav-link mt-4 text-muted border-top pt-3">
@@ -309,17 +309,17 @@
     </div>
 
     <!-- <div class="modal fade" id="addressModal" tabindex="-1">
-                                        <div class="modal-dialog modal-dialog-centered">
-                                            <div class="modal-content p-4">
-                                                <h5 class="fw-bold mb-3">Address Details</h5>
-                                                <form id="addressForm">
-                                                    <label class="yp-form-label">Full Address</label>
-                                                    <textarea id="address_line1" class="yp-form-input" rows="3">123 Pickle Lane, Coimbatore, 641001</textarea>
-                                                    <button type="submit" class="yp-btn-primary w-100 mt-2">Update Address</button>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    </div> -->
+                                                <div class="modal-dialog modal-dialog-centered">
+                                                    <div class="modal-content p-4">
+                                                        <h5 class="fw-bold mb-3">Address Details</h5>
+                                                        <form id="addressForm">
+                                                            <label class="yp-form-label">Full Address</label>
+                                                            <textarea id="address_line1" class="yp-form-input" rows="3">123 Pickle Lane, Coimbatore, 641001</textarea>
+                                                            <button type="submit" class="yp-btn-primary w-100 mt-2">Update Address</button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div> -->
     <div class="modal fade" id="addressModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content p-4">
@@ -500,7 +500,14 @@
                                 confirmButtonText: 'OK',
                                 confirmButtonColor: '#28a745'
                             }).then(() => {
-                                location.reload(); // reload after clicking OK
+                                // location.reload(); // reload after clicking OK
+                                let urlParams = new URLSearchParams(window.location.search);
+
+                                if (urlParams.get('from') === 'checkout') {
+                                    window.location.href = "{{ route('checkout') }}";
+                                } else {
+                                    location.reload();
+                                }
                             });
 
                         }
@@ -555,7 +562,14 @@
                                 icon: 'success',
                                 confirmButtonColor: '#28a745'
                             }).then(() => {
-                                location.reload();
+                                let urlParams = new URLSearchParams(window.location.search);
+
+                                if (urlParams.get('from') === 'checkout') {
+                                    window.location.href = "{{ route('checkout') }}";
+                                } else {
+                                    location.reload();
+                                }
+                                // location.reload();
                             });
                         }
                     },
@@ -649,14 +663,21 @@
                 let orderId = $(this).data('id');
                 let url = "{{ route('order.cancel', ':id') }}";
                 url = url.replace(':id', orderId);
+
                 Swal.fire({
-                    title: 'Are you sure?',
-                    text: "You want to cancel this order!",
-                    icon: 'warning',
+                    title: 'Cancel this order?',
+                    text: "Please enter cancel reason",
+                    input: 'textarea',
+                    inputPlaceholder: 'Type your reason here...',
+                    inputValidator: (value) => {
+                        if (!value) {
+                            return 'Cancel reason is required!';
+                        }
+                    },
                     showCancelButton: true,
                     confirmButtonColor: '#d33',
                     cancelButtonColor: '#6c757d',
-                    confirmButtonText: 'Yes, Cancel it!'
+                    confirmButtonText: 'Submit Cancel'
                 }).then((result) => {
 
                     if (result.isConfirmed) {
@@ -665,24 +686,36 @@
                             url: url,
                             type: "POST",
                             data: {
-                                _token: "{{ csrf_token() }}"
+                                _token: "{{ csrf_token() }}",
+                                reason: result.value
                             },
                             success: function (res) {
 
-                                Swal.fire(
-                                    'Cancelled!',
-                                    res.message,
-                                    'success'
-                                );
+                                if (res.status) {
 
-                                $('#ordersTable').DataTable().ajax.reload(null, false);
+                                    Swal.fire({
+                                        title: 'Cancelled!',
+                                        text: res.message,
+                                        icon: 'success',
+                                        confirmButtonColor: '#28a745'
+                                    }).then(() => {
+                                        $('#ordersTable').DataTable().ajax.reload(null, false);
+                                    });
+
+                                } else {
+
+                                    Swal.fire('Warning', res.message, 'warning');
+                                }
                             },
-                            error: function () {
-                                Swal.fire(
-                                    'Error!',
-                                    'Something went wrong.',
-                                    'error'
-                                );
+                            error: function (xhr) {
+
+                                let message = 'Something went wrong.';
+
+                                if (xhr.responseJSON && xhr.responseJSON.message) {
+                                    message = xhr.responseJSON.message;
+                                }
+
+                                Swal.fire('Error!', message, 'error');
                             }
                         });
 
@@ -694,14 +727,24 @@
                 let orderId = $(this).data('id');
                 let url = "{{ route('order.return', ':id') }}";
                 url = url.replace(':id', orderId);
+
                 Swal.fire({
                     title: 'Return this order?',
-                    text: "Do you want to request a return?",
-                    icon: 'question',
+                    text: "Please enter return reason",
+                    input: 'textarea',
+                    inputPlaceholder: 'Type your reason here...',
+                    inputAttributes: {
+                        'aria-label': 'Return reason'
+                    },
+                    inputValidator: (value) => {
+                        if (!value) {
+                            return 'Return reason is required!';
+                        }
+                    },
                     showCancelButton: true,
+                    confirmButtonText: 'Submit Return',
                     confirmButtonColor: '#ffc107',
-                    cancelButtonColor: '#6c757d',
-                    confirmButtonText: 'Yes, Return it!'
+                    cancelButtonColor: '#6c757d'
                 }).then((result) => {
 
                     if (result.isConfirmed) {
@@ -710,24 +753,30 @@
                             url: url,
                             type: "POST",
                             data: {
-                                _token: "{{ csrf_token() }}"
+                                _token: "{{ csrf_token() }}",
+                                reason: result.value
                             },
                             success: function (res) {
 
-                                Swal.fire(
-                                    'Return Requested!',
-                                    res.message,
-                                    'success'
-                                );
+                                if (res.status) {
 
-                                $('#ordersTable').DataTable().ajax.reload(null, false);
+                                    Swal.fire({
+                                        title: 'Return Requested!',
+                                        text: res.message,
+                                        icon: 'success',
+                                        confirmButtonColor: '#28a745'
+                                    }).then(() => {
+                                        $('#ordersTable').DataTable().ajax.reload(null, false);
+                                    });
+
+                                } else {
+
+                                    Swal.fire('Warning', res.message, 'warning');
+                                }
                             },
                             error: function () {
-                                Swal.fire(
-                                    'Error!',
-                                    'Something went wrong.',
-                                    'error'
-                                );
+
+                                Swal.fire('Error!', 'Something went wrong.', 'error');
                             }
                         });
 

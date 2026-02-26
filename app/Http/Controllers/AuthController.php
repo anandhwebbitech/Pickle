@@ -11,6 +11,10 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Str;
+use Illuminate\Auth\Events\PasswordReset;
+
 
 class AuthController extends Controller
 {
@@ -29,6 +33,7 @@ class AuthController extends Controller
                 'errors' => $validator->errors()
             ], 422);
         }
+        $otp = random_int(1000, 9999);
 
         $user = User::create([
             'name'     => $request->name,
@@ -36,11 +41,25 @@ class AuthController extends Controller
             'phone'    => $request->phone,
             'password' => Hash::make($request->password),
             'role'     => 2,
+            'otp' => $otp,
+            'otp_expires_at' => Carbon::now()->addMinutes(5)
         ]);
-        Auth::login($user);
+        Mail::send('frontend.pages.otp_email', ['otp' => $otp, 'user' => $user], function ($message) use ($user) {
+            $message->to($user->email)
+                ->subject('Your Login OTP')
+                ->from($user->email, $user->name);
+        });
+        session(['otp_email' => $user->email]);
         return response()->json([
-            'message' => 'Account created successfully!'
+            'status' => true,
+            'message' => 'OTP sent to your email',
+
+            'redirect' => route('otp')
         ]);
+        // Auth::login($user);
+        // return response()->json([
+        //     'message' => 'Account created successfully!'
+        // ]);
     }
     public function login1(Request $request)
     {
@@ -83,7 +102,7 @@ class AuthController extends Controller
     //         ]);
     //     }
 
-    //     // 🚫 Block users with role = 1
+    //     // ðŸš« Block users with role = 1
     //     if ($user->role == 1) {
     //         return response()->json([
     //             'status' => false,
@@ -92,14 +111,14 @@ class AuthController extends Controller
     //     }
 
 
-    //     // ✅ Generate OTP
+    //     // âœ… Generate OTP
     //     $otp = rand(100000, 999999);
     //     $user->update([
     //         'otp' => $otp,
     //         'otp_expires_at' => Carbon::now()->addMinutes(5)
     //     ]);
 
-    //     // ✅ Send OTP Mail
+    //     // âœ… Send OTP Mail
     //     // Mail::send('frontend.pages.otp_email', ['otp' => $otp, 'user' => $user], function ($message) use ($user) {
     //     //     $message->to($user->email)
     //     //         ->subject('Your Login OTP');
@@ -119,7 +138,7 @@ class AuthController extends Controller
     //     ])) {
     //         $user = Auth::user();
 
-    //         // ✅ Merge guest wishlist after login
+    //         // âœ… Merge guest wishlist after login
     //         if (session()->has('guest_wishlist')) {
 
     //             $guestWishlist = session()->get('guest_wishlist', []);
@@ -132,7 +151,7 @@ class AuthController extends Controller
     //             session()->put($userKey, $mergedWishlist);
     //             session()->forget('guest_wishlist');
     //         }
-    //         // 🔥 MOVE GUEST CART TO DATABASE
+    //         // ðŸ”¥ MOVE GUEST CART TO DATABASE
     //         if (session()->has('guest_cart')) {
 
     //             $guestCart = session()->get('guest_cart');
@@ -199,7 +218,7 @@ class AuthController extends Controller
     //         ]);
     //     }
 
-    //     // ✅ Login user after OTP verification
+    //     // âœ… Login user after OTP verification
     //     Auth::login($user);
 
     //     // Clear OTP
@@ -230,7 +249,7 @@ class AuthController extends Controller
             ]);
         }
 
-        // ✅ Check password manually (DO NOT Auth::attempt here)
+        // âœ… Check password manually (DO NOT Auth::attempt here)
         if (!Hash::check($request->password, $user->password)) {
             return response()->json([
                 'status' => false,
@@ -238,14 +257,14 @@ class AuthController extends Controller
             ]);
         }
 
-        // ✅ Generate OTP
+        // âœ… Generate OTP
         $otp = random_int(1000, 9999);
         $user->update([
             'otp' => $otp,
             'otp_expires_at' => Carbon::now()->addMinutes(5)
         ]);
 
-        // // ✅ Send OTP Mail (CORRECT FROM)
+        // // âœ… Send OTP Mail (CORRECT FROM)
         Mail::send('frontend.pages.otp_email', ['otp' => $otp, 'user' => $user], function ($message) use ($user) {
             $message->to($user->email)
                 ->subject('Your Login OTP')
@@ -286,29 +305,29 @@ class AuthController extends Controller
             ]);
         }
 
-        // ✅ Login user HERE
+        // âœ… Login user HERE
         Auth::login($user);
 
-        // ✅ Clear OTP
+        // âœ… Clear OTP
         $user->update([
             'otp' => null,
             'otp_expires_at' => null
         ]);
 
-        // 🔥 Move guest cart AFTER login
+        // ðŸ”¥ Move guest cart AFTER login
         $this->moveGuestCart($user);
         $this->mergeGuestWishlist($user);
 
         return response()->json([
             'status' => true,
             'message' => 'Login successful!',
-            'redirect' => route('home')
+            'redirect' => redirect()->intended(route('home'))->getTargetUrl()
         ]);
     }
     private function mergeGuestWishlist($user)
     {
 
-        // ✅ Merge guest wishlist after login
+        // âœ… Merge guest wishlist after login
         if (session()->has('guest_wishlist')) {
 
             $guestWishlist = session()->get('guest_wishlist', []);
@@ -324,7 +343,7 @@ class AuthController extends Controller
     }
     private function moveGuestCart($user)
     {
-        // 🔥 MOVE GUEST CART TO DATABASE
+        // ðŸ”¥ MOVE GUEST CART TO DATABASE
         if (session()->has('guest_cart')) {
 
             $guestCart = session()->get('guest_cart');
@@ -456,7 +475,7 @@ class AuthController extends Controller
             ]);
         }
 
-        // 🔥 Generate new OTP
+        // ðŸ”¥ Generate new OTP
         $otp = random_int(1000, 9999);
 
         $user->update([
@@ -464,7 +483,7 @@ class AuthController extends Controller
             'otp_expires_at' => now()->addMinutes(5)
         ]);
 
-        // 🔥 Send email
+        // ðŸ”¥ Send email
         Mail::send('frontend.pages.otp_email', [
             'otp' => $otp,
             'user' => $user
@@ -479,4 +498,97 @@ class AuthController extends Controller
             'message' => 'New OTP sent successfully!'
         ]);
     }
+    public function forgotPassword()
+    {
+        return view('frontend.pages.forgot-password');
+    }
+
+    public function sendResetLink(Request $request)
+{
+    $request->validate([
+        'email' => 'required|email|exists:users,email'
+    ]);
+
+    $user = User::where('email', $request->email)->first();
+
+    // Generate token
+    $token = Str::random(64);
+
+    // Store token in password_reset_tokens table
+    DB::table('password_reset_tokens')->updateOrInsert(
+        ['email' => $user->email],
+        [
+            'email' => $user->email,
+            'token' => Hash::make($token),
+            'created_at' => Carbon::now()
+        ]
+    );
+
+    // Create reset link
+    $resetLink = route('password.reset', [
+        'token' => $token,
+        'email' => $user->email
+    ]);
+    // Send Email (LIKE YOUR OTP STYLE)
+    try {
+        Mail::send('frontend.pages.reset_email', ['resetLink' => $resetLink, 'user' => $user], function ($message) use ($user) {
+                    $message->to($user->email)
+                        ->subject('Reset Your Password')
+                        ->from($user->email, $user->name);
+                });
+
+    } catch (\Exception $e) {
+
+        return response()->json([
+            'status' => false,
+            'message' => $e->getMessage()
+        ]);
+    }
+
+    return response()->json([
+        'status' => true,
+        'message' => 'Password reset link sent to your email.'
+    ]);
+}
+public function showResetForm($token)
+{
+    return view('frontend.pages.reset-password', [
+        'token' => $token
+    ]);
+}
+public function resetPassword(Request $request)
+{
+    $request->validate([
+        'token' => 'required',
+        'email' => 'required|email',
+        'password' => 'required|min:8|confirmed',
+    ]);
+
+    $record = DB::table('password_reset_tokens')
+        ->where('email', $request->email)
+        ->first();
+
+    if (!$record || !Hash::check($request->token, $record->token)) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Invalid or expired token.'
+        ]);
+    }
+
+    $user = User::where('email', $request->email)->first();
+
+    $user->password = Hash::make($request->password);
+    $user->save();
+
+    // Delete token after use
+    DB::table('password_reset_tokens')
+        ->where('email', $request->email)
+        ->delete();
+
+    return response()->json([
+        'status' => true,
+        'message' => 'Password reset successfully.',
+        'redirect' => route('login')
+    ]);
+}
 }

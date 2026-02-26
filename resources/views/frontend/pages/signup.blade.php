@@ -97,7 +97,9 @@ $('#signupForm').on('submit', function(e) {
                 confirmButtonColor: '#28a745'
             }).then(() => {
                 $('#signupForm')[0].reset();
-                window.location.href = "{{ route('home') }}";
+                // window.location.href = "{{ route('home') }}";
+                window.location.href = response.redirect;
+
 
             });
 
