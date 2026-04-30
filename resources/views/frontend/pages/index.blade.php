@@ -23,35 +23,19 @@
         <div class="swiper bannerSwiper">
             <div class="swiper-wrapper">
 
-                <!-- Slide 1 -->
-                <div class="swiper-slide">
-                    <div class="banner-content"
-                        style="background-image: linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.45)), url('{{ asset('asset/img/garlic.webp') }}');">
-                        <div class="container text-white d-flex align-items-center h-100">
+                @foreach ($banners as $banner)
+                    <div class="swiper-slide">
+                        <div class="banner-content"
+                            style="background-image: linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.45)), url('{{ asset('public/uploads/banners/'.$banner->image) }}');">
+                            
+                            <div class="container text-white d-flex align-items-center h-100">
+                                {{-- Optional content --}}
+                                {{-- <h3>{{ $banner->name }}</h3> --}}
+                            </div>
 
                         </div>
                     </div>
-                </div>
-
-                <!-- Slide 2 -->
-                <div class="swiper-slide">
-                    <div class="banner-content"
-                        style="background-image: linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.45)), url('{{ asset('asset/img/mango.webp') }}');">
-                        <div class="container text-white d-flex align-items-center h-100">
-
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Slide 3 -->
-                <div class="swiper-slide">
-                    <div class="banner-content"
-                        style="background-image: linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.45)), url('{{ asset('asset/img/lemon.webp') }}');">
-                        <div class="container text-white d-flex align-items-center h-100">
-
-                        </div>
-                    </div>
-                </div>
+                @endforeach
 
             </div>
             <div class="swiper-pagination"></div>
@@ -102,7 +86,7 @@
 
                                     // Get main and hover images with fallback
                                     $mainImage = $images[0] ?? $defaultImage;
-                                    $hoverImage = $images[1] ?? $defaultImage;
+                                    $hoverImage = $images[1] ?? $mainImage;
                                 @endphp
                                     <a href="{{ route('product-details', $product->id) }}">
 
@@ -313,7 +297,7 @@
 
                                     // Get main and hover images with fallback
                                     $mainImage = $images[0] ?? $defaultImage;
-                                    $hoverImage = $images[1] ?? $defaultImage;
+                                    $hoverImage = $images[1] ?? $mainImage;
                                 @endphp
                                 <a href="{{ route('product-details', $product->id) }}">
 
@@ -448,55 +432,32 @@
 
         <div class="row g-3">
 
-            <!-- Repeat this block for each video -->
-            <div class="col-6 col-md-3">
-                <div class="yt-card position-relative" onclick="loadVideo(this, 'd38xWWg62LY')">
+            
+            @php
+                function getYoutubeId($url) {
+                    preg_match('/(youtu\.be\/|youtube\.com\/(watch\?v=|embed\/))([a-zA-Z0-9_-]+)/', $url, $matches);
+                    return $matches[3] ?? null;
+                }
+            @endphp
 
-                    <!-- Thumbnail -->
-                    <img src="https://img.youtube.com/vi/d38xWWg62LY/hqdefault.jpg" class="img-fluid rounded"
-                        loading="lazy">
+            @foreach ($shorts as $short)
+                @php
+                    $videoId = getYoutubeId($short->youtube_url);
+                @endphp
 
-                    <!-- Play Button -->
-                    <div class="play-btn">▶</div>
+                <div class="col-6 col-md-3">
+                    <div class="yt-card position-relative"
+                        onclick="loadVideo(this, '{{ $videoId }}')">
 
+                        <img src="https://img.youtube.com/vi/{{ $videoId }}/hqdefault.jpg"
+                            class="img-fluid rounded"
+                            loading="lazy">
+
+                        <div class="play-btn">▶</div>
+                    </div>
                 </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="yt-card position-relative" onclick="loadVideo(this, 'd38xWWg62LY')">
-
-                    <!-- Thumbnail -->
-                    <img src="https://img.youtube.com/vi/d38xWWg62LY/hqdefault.jpg" class="img-fluid rounded"
-                        loading="lazy">
-
-                    <!-- Play Button -->
-                    <div class="play-btn">▶</div>
-
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="yt-card position-relative" onclick="loadVideo(this, 'd38xWWg62LY')">
-
-                    <!-- Thumbnail -->
-                    <img src="https://img.youtube.com/vi/d38xWWg62LY/hqdefault.jpg" class="img-fluid rounded"
-                        loading="lazy">
-
-                    <!-- Play Button -->
-                    <div class="play-btn">▶</div>
-
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="yt-card position-relative" onclick="loadVideo(this, 'd38xWWg62LY')">
-
-                    <!-- Thumbnail -->
-                    <img src="https://img.youtube.com/vi/d38xWWg62LY/hqdefault.jpg" class="img-fluid rounded"
-                        loading="lazy">
-
-                    <!-- Play Button -->
-                    <div class="play-btn">▶</div>
-
-                </div>
-            </div>
+            @endforeach
+            
 
         </div>
     </section>
@@ -547,7 +508,7 @@
 
                                     // Get main and hover images with fallback
                                     $mainImage = $images[0] ?? $defaultImage;
-                                    $hoverImage = $images[1] ?? $defaultImage;
+                                    $hoverImage = $images[1] ?? $mainImage;
                                 @endphp
                                 <a href="{{ route('product-details', $product->id) }}">
 

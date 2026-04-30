@@ -11,6 +11,7 @@ use App\Models\ProductImage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use App\Models\ProductPriceDetail;
+use App\Models\SubCategory;
 use Yajra\DataTables\DataTables;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -97,13 +98,13 @@ class ProductController extends Controller
 
             // 1️⃣ Validate
             $request->validate([
-                'name'        => 'required|string|max:255',
-                'category_id' => 'required|integer',
-                'images' => 'required|array|max:2',
-                'images.*' => 'image|mimes:jpeg,png,jpg,webp|max:2048',
-                'quantity'    => 'required|numeric', // KG
-                'weights.*.weight' => 'required|string',
-                'weights.*.price'  => 'required|numeric',
+                'name'              => 'required|string|max:255',
+                'category_id'       => 'required|integer',
+                'images'            => 'required|array|max:4',
+                'images.*'          => 'image|mimes:jpeg,png,jpg,webp|max:2048',
+                'quantity'          => 'required|numeric', // KG
+                'weights.*.weight'  => 'required|string',
+                'weights.*.price'   => 'required|numeric',
             ]);
 
 
@@ -122,6 +123,8 @@ class ProductController extends Controller
             $product = Product::create([
                 'name'        => $request->name,
                 'category_id' => $request->category_id,
+                'sub_category_id' => $request->sub_category_id, // ✅ ADD THIS
+
                 'description' => $request->description,
                 'deals'       => $request->deals ?? 0,
                 'weight'      => null, // handled in price table
@@ -248,11 +251,11 @@ class ProductController extends Controller
         Product::findOrFail($id)->delete();
         return response()->json(['success' => true]);
     }
-    public function Orders(Request $request)
+    public function     Orders(Request $request)
     {
         if ($request->ajax()) {
 
-            $products = Order::with(['category', 'product'])->latest();
+            $products = Order::with(['category', 'product'])->whereNotIn('status',[7])->latest();
             return DataTables::of($products)
                 ->addIndexColumn()
                 ->addColumn('orderid', function ($row) {
@@ -506,5 +509,12 @@ class ProductController extends Controller
             'status' => true,
             'data'   => $order
         ]);
+    }
+
+    public function getSubCategories($category_id)
+    {
+        return SubCategory::where('category_id', $category_id)
+            ->where('status', 1)
+            ->get();
     }
 }

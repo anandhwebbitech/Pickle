@@ -13,7 +13,7 @@
             <button class="sidebar-toggle-btn d-lg-none" id="toggleSidebar">☰</button>
 
             <div class="brand">
-                YUMMY <span>PICKLE</span>
+                ANNI'S <span>PICKLE</span>
             </div>
         </div>
 

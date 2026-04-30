@@ -321,7 +321,7 @@ class AuthController extends Controller
         return response()->json([
             'status' => true,
             'message' => 'Login successful!',
-            'redirect' => redirect()->intended(route('home'))->getTargetUrl()
+            'redirect' => session()->pull('url.intended', route('home'))
         ]);
     }
     private function mergeGuestWishlist($user)
@@ -382,7 +382,7 @@ class AuthController extends Controller
     {
         $request->validate([
             'current_password' => 'required',
-            'new_password' => 'required|min:6|confirmed',
+            'new_password'     => 'required|min:6|confirmed',
         ], [
             'new_password.confirmed' => 'New password and confirm password must match.',
         ]);
@@ -396,11 +396,19 @@ class AuthController extends Controller
             ], 401);
         }
 
-        // Check current password
+        // Check current password is correct
         if (!Hash::check($request->current_password, $user->password)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Current password is incorrect.'
+            ], 400);
+        }
+
+        // 🔥 Check if new password is same as current password
+        if (Hash::check($request->new_password, $user->password)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'New password cannot be the same as the current password.'
             ], 400);
         }
 
@@ -431,8 +439,14 @@ class AuthController extends Controller
     {
         $user = User::findOrFail($id);
 
+        $request->validate([
+            'name'  => 'required|string|max:255',
+            'email' => 'nullable|email',
+            'phone' => 'required|unique:users,phone,' . $id,
+        ]);
+
         $user->update([
-            'name' => $request->name,
+            'name'  => $request->name,
             'email' => $request->email,
             'phone' => $request->phone,
         ]);

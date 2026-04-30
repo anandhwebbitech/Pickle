@@ -28,10 +28,14 @@ class AppServiceProvider extends ServiceProvider
             Paginator::useBootstrapFive();
         View::composer('*', function ($view) {
             $categories = cache()->remember('nav_categories', 60, function () {
-                return Category::where('status', 1)->get();
+
+                return Category::with('subcategories') // ✅ important
+                    ->where('status', 1)
+                    ->get();
             });
             $cartCount = 0;
             $wishlistCount = 0;
+            // dd($categories);
             if (Auth::check()) {
 
                 $user = Auth::user();

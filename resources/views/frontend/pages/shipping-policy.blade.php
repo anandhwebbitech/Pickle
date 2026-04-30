@@ -15,7 +15,7 @@
 
     <main class="legal-document-container">
 
-        <div class="legal-content-block">
+        {{-- <div class="legal-content-block">
             <h3 class="legal-block-title">Order Processing</h3>
             <p class="legal-text-body">
                 All orders placed on Yummy Pickle are processed within 24–48 working hours after successful payment confirmation, excluding Sundays and public holidays.
@@ -62,14 +62,28 @@
             <p class="legal-text-body">
                 Please ensure your shipping address is accurate at checkout. We are not responsible for non-delivery due to incorrect or incomplete address details provided by the customer.
             </p>
+        </div> --}}
+        <div class="legal-content-block">
+            <p class="legal-text-body">
+                We offer shipping across India. All orders are processed and dispatched within 2–3 business days after order confirmation.            
+            </p>
+            <p class="legal-text-body">
+                Delivery timelines depend on the destination and usually range between 5–7 business days.
+            </p>
+            <p class="legal-text-body">
+                Delivery timelines depend on the destination and usually range between 5–7 business days.
+            </p>
+            <p class="legal-text-body">
+                Please note that delays caused by courier partners, weather conditions, or unforeseen circumstances are beyond our control.
+            </p>
         </div>
 
         <div class="legal-notice-panel">
             <h4 class="fw-bold mb-3" style="color: #212529;">Need further assistance?</h4>
             <p class="mb-0">
                 If you have questions about our Shipping Policy, please contact us at
-                <strong style="color: #d63342;">legal@yummypickle.in</strong> or call
-                <strong style="color: #d63342;">+91 98765 43210</strong>.
+                <strong style="color: #d63342;">info@anniskitchen.com</strong> or call
+                <strong style="color: #d63342;">+91 9677739608</strong>.
             </p>
         </div>
 

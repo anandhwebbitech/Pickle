@@ -71,14 +71,58 @@
                                 @endforeach
                             </tbody>
                         </table>
+                        @php
+                            $gst_rate = 18;
+                            $cgst = 0;
+                            $sgst = 0;
+                            $igst = 0;
 
+                            $subtotal = $grandTotal;
+                            $discount = 0; // update if you have discount
+                            $country = $country ?? 'India';
+                            $state = $state ?? '';
+
+                            if (strtolower($country) === 'india') {
+                                $company_state = 'Tamil Nadu';
+
+                                if (strtolower($state) === strtolower($company_state)) {
+                                    $gst_total = ($subtotal - $discount) * $gst_rate / 100;
+                                    $cgst = $gst_total / 2;
+                                    $sgst = $gst_total / 2;
+                                } else {
+                                    $igst = ($subtotal - $discount) * $gst_rate / 100;
+                                }
+                            }
+
+                            $gst_total = $cgst + $sgst + $igst;
+                            $delivery = 0;
+                            $total = ($subtotal - $discount) + $gst_total + $delivery;
+                        @endphp
                         <!-- Summary -->
                         <table width="100%" cellpadding="5" cellspacing="0" style="margin-top:20px;">
                             <tr>
-                                <td align="right" style="font-size:15px;">
-                                    <strong>Grand Total: ₹{{ number_format($grandTotal,2) }}</strong>
-                                </td>
+                                <td align="right">Subtotal: ₹{{ number_format($subtotal,2) }}</td>
                             </tr>
+
+                            @if($cgst > 0)
+                            <tr>    
+                                <td align="right">CGST: ₹{{ number_format($cgst,2) }}</td>
+                            </tr>
+                            <tr>
+                                <td align="right">SGST: ₹{{ number_format($sgst,2) }}</td>
+                            </tr>
+                            @endif
+
+                            @if($igst > 0)
+                            <tr>
+                                <td align="right">IGST: ₹{{ number_format($igst,2) }}</td>
+                            </tr>
+                            @endif
+
+                            <tr>
+                                <td align="right"><strong>Grand Total: ₹{{ number_format($total,2) }}</strong></td>
+                            </tr>
+
                             <tr>
                                 <td align="right" style="font-size:14px; color:#555;">
                                     Payment Method: <strong>Cash on Delivery</strong>

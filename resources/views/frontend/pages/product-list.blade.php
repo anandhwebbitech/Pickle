@@ -1,5 +1,89 @@
 @extends('frontend.layouts.app')
 @section('content')
+<style>
+    .category-sidebar{
+        background:#fff;
+        border-radius:20px;
+        padding:24px;
+        box-shadow:0 4px 20px rgba(0,0,0,0.06);
+    }
+
+    .category-title{
+        font-size:22px;
+        font-weight:700;
+        color:#222;
+        margin-bottom:20px;
+    }
+
+    .category-item{
+        margin-bottom:14px;
+    }
+
+    .category-main-link{
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        padding:12px 16px;
+        border-radius:14px;
+        text-decoration:none;
+        background:#fafafa;
+        color:#333;
+        font-weight:600;
+        transition:all .3s ease;
+    }
+
+    .category-main-link:hover{
+        background:#f8edf4;
+        color:#5E0E3C;
+        transform:translateX(3px);
+    }
+
+    .category-main-link.active{
+        background:#f6d0e5;
+        color:#fff;
+    }
+
+    .subcategory-list{
+        margin-top:10px;
+        margin-left:12px;
+        border-left:2px solid #f1d7e5;
+        padding-left:14px;
+    }
+
+    .subcategory-link{
+        display:flex;
+        align-items:center;
+        gap:8px;
+        text-decoration:none;
+        color:#666;
+        font-size:14px;
+        padding:8px 10px;
+        border-radius:10px;
+        transition:all .3s ease;
+        margin-bottom:6px;
+    }
+
+    .subcategory-link:hover{
+        background:#f8edf4;
+        color:#5E0E3C;
+        transform:translateX(3px);
+    }
+
+    .subcategory-link.active{
+        background:#f8edf4;
+        color:#5E0E3C;
+        font-weight:600;
+    }
+
+    .all-link{
+        background:#111;
+        color:#fff !important;
+    }
+
+    .all-link:hover{
+        background:#5E0E3C;
+    }
+</style>
 
 
     <section class="py-5" style="background-color: #fcf9f4;">
@@ -34,23 +118,66 @@
                     </h5>
                     <hr class="mb-4" style="width: 40px; border-top: 3px solid #5E0E3C; opacity: 1;">
 
-                    <ul class="list-unstyled category-list">
+                   <ul class="list-unstyled category-list">
+
+                        {{-- All Products --}}
                         <li class="mb-3">
                             <a href="{{ route('product') }}"
-                            class="text-decoration-none {{ request('category') ? 'text-muted' : 'fw-bold text-dark' }}">
+                            class="text-decoration-none {{ !request('category') ? 'fw-bold text-dark' : 'text-muted' }}">
+
                                 All
+
                             </a>
                         </li>
 
                         @foreach ($categories as $category)
-                            <li class="mb-3">
-                                <a href="{{ route('product', ['category' => $category->id]) }}"
-                                class="text-decoration-none 
-                                {{ request('category') == $category->id ? 'fw-bold text-dark' : 'text-muted hover-red' }}">
-                                    {{ $category->name }}
-                                </a>
-                            </li>
+
+            <li class="category-item">
+
+                {{-- Category --}}
+                <a href="{{ route('product', ['category' => $category->id]) }}"
+                   class="category-main-link
+                   {{ request('category') == $category->id && !request('subcategory')
+                        ? 'active'
+                        : '' }}">
+
+                    <span>{{ $category->name }}</span>
+
+                    {{-- <i class="bi bi-chevron-right"></i> --}}
+
+                </a>
+
+                {{-- Sub Categories --}}
+                @if($category->subcategories->count())
+
+                    <div class="subcategory-list">
+
+                        @foreach($category->subcategories as $sub)
+
+                            <a href="{{ route('product', [
+                                    'category' => $category->id,
+                                    'subcategory' => $sub->id
+                                ]) }}"
+                               class="subcategory-link
+                               {{ request('subcategory') == $sub->id
+                                    ? 'active'
+                                    : '' }}">
+
+                                <i class="bi bi-dot"></i>
+
+                                {{ $sub->sub_category_name }}
+
+                            </a>
+
                         @endforeach
+
+                    </div>
+
+                @endif
+
+            </li>
+
+        @endforeach
 
                     </ul>
                 </div>
@@ -108,7 +235,7 @@
 
                                     // Get main and hover images with fallback
                                     $mainImage = $images[0] ?? $defaultImage;
-                                    $hoverImage = $images[1] ?? $defaultImage;
+                                    $hoverImage = $images[1] ?? $mainImage;
                                 @endphp
                                 <a href="{{ route('product-details', $product->id) }}">
 

@@ -793,7 +793,8 @@
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
-                        "X-CSRF-TOKEN": document.querySelector('input[name="_token"]').value
+                        "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute("content"),
+                        "Accept": "application/json"
                     },
                     body: JSON.stringify({
                         name: document.getElementById("input-name").value,
@@ -801,40 +802,57 @@
                         phone: document.getElementById("input-phone").value
                     })
                 })
-                    .then(response => response.json())
-                    .then(data => {
+                .then(async response => {
 
-                        if (data.success) {
+                    const data = await response.json();
 
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Updated!',
-                                text: 'Profile updated successfully.',
-                                confirmButtonColor: '#5e0e3c'
-                            });
+                    // ✅ Handle validation error (422)
+                    if (!response.ok) {
 
-                            // Close modal
-                            let modal = bootstrap.Modal.getInstance(document.getElementById('profileModal'));
-                            modal.hide();
-
-                        } else {
+                        if (response.status === 422) {
+                            let errorMessage = Object.values(data.errors)[0][0];
 
                             Swal.fire({
                                 icon: 'error',
-                                title: 'Oops...',
-                                text: 'Something went wrong!'
+                                title: 'Validation Error',
+                                text: errorMessage
                             });
 
+                            return;
                         }
-                    })
-                    .catch(error => {
+
+                        throw new Error("Server error");
+                    }
+
+                    return data;
+                })
+                .then(data => {
+
+                    if (!data) return;
+
+                    if (data.success) {
+
                         Swal.fire({
-                            icon: 'error',
-                            title: 'Server Error',
-                            text: 'Please try again later.'
+                            icon: 'success',
+                            title: 'Updated!',
+                            text: 'Profile updated successfully.',
+                            confirmButtonColor: '#5e0e3c'
                         });
-                        console.error("Error:", error);
+
+                        let modal = bootstrap.Modal.getInstance(document.getElementById('profileModal'));
+                        modal.hide();
+                    }
+
+                })
+                .catch(error => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Server Error',
+                        text: 'Please try again later.'
                     });
+
+                    console.error("Error:", error);
+                });
             });
 
             document.getElementById("pincode").addEventListener("blur", function () {

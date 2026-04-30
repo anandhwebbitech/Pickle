@@ -38,5 +38,13 @@ return [
         'key' => env('RAZORPAY_KEY'),
         'secret' => env('RAZORPAY_SECRET'),
     ],
+   'phonepe' => [
+        'base_url' => env('PHONEPE_BASE_URL'),
+        'token_url' => env('PHONEPE_TOKEN_URL'),
+        'merchant_id' => env('PHONEPE_MERCHANT_ID'),
+        'client_id' => env('PHONEPE_CLIENT_ID'),
+        'client_secret' => env('PHONEPE_CLIENT_SECRET'),
+        'client_version' => env('PHONEPE_CLIENT_VERSION'),
+    ],
 
 ];

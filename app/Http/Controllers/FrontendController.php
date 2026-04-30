@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Banner;
 use App\Models\Cart;
 use App\Models\Category;
 use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\PaymentDetail;
 use App\Models\Product;
+use App\Models\Short;
 use App\Models\UserAddress;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,7 +18,8 @@ use Illuminate\Support\Facades\DB;
 use Razorpay\Api\Errors\SignatureVerificationError;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Mail;
-
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Http;
 
 
 class FrontendController extends Controller
@@ -40,10 +43,11 @@ class FrontendController extends Controller
             // Guest wishlist
             $wishlist = session()->get('guest_wishlist', []);
         }
-
+        $banners = Banner::where('status',1)->get();
+        $shorts = Short::where('status',1)->get();
         // Get only product IDs
         $wishlistIds = array_keys($wishlist);
-        return view('frontend.pages.index', compact('products', 'wishlistIds', 'categories', 'treding_deals', 'south_indian'));
+        return view('frontend.pages.index', compact('products', 'wishlistIds', 'categories', 'treding_deals', 'south_indian','banners','shorts'));
     }
     public function About()
     {
@@ -69,6 +73,10 @@ class FrontendController extends Controller
     {
         return view('frontend.pages.shipping-policy');
     }
+    public function Return_policy()
+    {
+        return view('frontend.pages.return-policy');
+    }
     public function Product(Request $request)
     {
         $query = Product::where('status', 1);
@@ -77,15 +85,11 @@ class FrontendController extends Controller
         if ($request->filled('category')) {
             $query->where('category_id', $request->category);
         }
+        if ($request->filled('subcategory')) {
 
-        // // ✅ Sorting (optional)
-        // if ($request->sort == 'low-high') {
-        //     $query->orderBy('price', 'asc');
-        // } elseif ($request->sort == 'high-low') {
-        //     $query->orderBy('price', 'desc');
-        // } else {
-        //     $query->latest();
-        // }
+            $query->where('sub_category_id', $request->subcategory);
+
+        }
 
         $products = $query->paginate(15)->withQueryString();
 
@@ -107,8 +111,8 @@ class FrontendController extends Controller
         // Get only product IDs
         $wishlistIds = array_keys($wishlist);
 
-        $categories = Category::where('status', 1)->get();
-
+        $categories = Category::with('subcategories')->where('status', 1)->get();
+        // dd($categories);
         return view(
             'frontend.pages.product-list',
             compact('products', 'wishlistIds', 'categories')
@@ -1155,9 +1159,11 @@ class FrontendController extends Controller
             $subtotal += $totalAmount;
 
             // Guest needs string id in JS
-            $jsId = $item['is_guest']
-                ? "'" . $item['id'] . "', true"
-                : $item['id'];
+            // $jsId = $item['is_guest']
+            //     ? "'" . $item['id'] . "', true"
+            //     : $item['id'];
+            $jsId = "'" . $item['id'] . "'";
+
 
             $html .= '
         <div class="yp-cart-item shadow-sm" data-id="' . $item['id'] . '">
@@ -1923,7 +1929,7 @@ class FrontendController extends Controller
                     'coupon_code'   => $request->coupon_code ?? 0,
                     'total'         => $item->total_amount,
                     'payment_type'  => 1, // Razorpay
-                    'status'        => 0,
+                    'status'        => 7, // test for payment fail
                     'order_date'    => now(),
                     'delivery_date' => now()->addDays(7),
                 ]);
@@ -2007,6 +2013,7 @@ class FrontendController extends Controller
             Order::whereIn('id', $orderIds)->update([
                 'status' => 1
             ]);
+            Order::where('user_id',$userId)->where('status', 7)->delete();
             $orders = Order::with('product')
                 ->whereIn('id', $orderIds)
                 ->get();
@@ -2033,13 +2040,13 @@ class FrontendController extends Controller
                 'order_date' => now(),
                 'payment_method' => 'Online Payment (Razorpay)'
             ];
-
+    
             // ✅ Send email
-            Mail::send('frontend.pages.order_email', $data, function ($message) use ($data) {
-                $message->to($data['email'])
-                    ->subject('Order Confirmation - Online Payment')
-                    ->from($data['email'], $data['fullname']);
-            });
+            // Mail::send('frontend.pages.order_email', $data, function ($message) use ($data) {
+            //     $message->to($data['email'])
+            //         ->subject('Order Confirmation - Online Payment')
+            //         ->from($data['email'], $data['fullname']);
+            // });
             DB::commit();
 
             return response()->json([
@@ -2226,7 +2233,7 @@ class FrontendController extends Controller
     {
         $products = Product::where('name', 'LIKE', '%' . $request->keyword . '%')
             ->where('status', 1)
-            ->take(5)
+            ->take(10)
             ->get();
 
         return response()->json($products);
@@ -2251,5 +2258,285 @@ class FrontendController extends Controller
             'status' => true,
             'message' => 'Address deleted successfully'
         ]);
+    }
+    public function getPhonePeToken()
+    {
+        $response = Http::asForm()->post(
+            config('services.phonepe.token_url'),
+            [
+                'client_id' => config('services.phonepe.client_id'),
+                'client_secret' => config('services.phonepe.client_secret'),
+                'grant_type' => 'client_credentials',
+                'client_version' => config('services.phonepe.client_version')
+            ]
+        );
+
+        return $response->json();
+    }
+
+    // 2️⃣ Create Payment
+    // public function createPhonePe(Request $request)
+    // {
+    //     // dd($this->getPhonePeToken());
+    //     $tokenData = $this->getPhonePeToken();
+
+    //     if (!isset($tokenData['access_token'])) {
+    //         return response()->json([
+    //             'status' => false,
+    //             'error' => $tokenData
+    //         ]);
+    //     }
+
+    //     $token = $tokenData['access_token'];
+    //     $merchantOrderId = 'ORD_' . time();
+
+    //     $payload = [
+    //         "merchantId" => config('services.phonepe.merchant_id'),
+    //         "merchantOrderId" => $merchantOrderId,
+    //         "amount" => (int) ($request->total * 100),
+    //         "expireAfter" => 1200,
+    //         "paymentFlow" => [
+    //             "type" => "PG_CHECKOUT",
+    //             "merchantUrls" => [
+    //                 "redirectUrl" => route('phonepe.response', [
+    //                     'merchantOrderId' => $merchantOrderId
+    //                 ])
+    //             ]
+    //         ]
+    //     ];
+
+    //     $response = Http::withHeaders([
+    //         'Content-Type' => 'application/json',
+    //         'Authorization' => 'O-Bearer ' . $token
+    //     ])->post(config('services.phonepe.base_url') . '/checkout/v2/pay', $payload);
+
+    //     $res = $response->json();
+
+    //     $redirectUrl = $res['redirectUrl'] ?? $res['data']['redirectUrl'] ?? null;
+    //     $phonepeOrderId = $res['orderId'] ?? $res['data']['orderId'] ?? null;
+
+    //     if ($redirectUrl && $phonepeOrderId) {
+
+    //         // // ✅ STORE IN DB (recommended)
+    //         // \App\Models\Payment::create([
+    //         //     'merchant_order_id' => $merchantOrderId,
+    //         //     'phonepe_order_id' => $phonepeOrderId,
+    //         //     'amount' => $request->total,
+    //         //     'status' => 'PENDING'
+    //         // ]);
+
+    //         return response()->json([
+    //             'status' => true,
+    //             'redirect_url' => $redirectUrl
+    //         ]);
+    //     }
+
+    //     return response()->json([
+    //         'status' => false,
+    //         'error' => $res
+    //     ]);
+    // }
+    public function createPhonePe(Request $request)
+    {
+        $tokenData = $this->getPhonePeToken();
+
+        if (!isset($tokenData['access_token'])) {
+            return response()->json([
+                'status' => false,
+                'error' => $tokenData
+            ]);
+        }
+
+        $token = $tokenData['access_token'];
+        $merchantOrderId = 'ORD_' . time();
+
+        // ✅ STORE TEMP DATA (VERY IMPORTANT)
+        session([
+            'order_ids' => $request->order_ids,
+            'amount' => $request->total
+        ]);
+            $userId = auth()->id();
+            $user = auth()->user();    
+            $cartItems = Cart::where('user_id', $userId)->get();
+            $addressId  = $request->address_id;
+            $couponCode = $request->coupon_code ?? 0;
+            $subtotal   = $request->subtotal ?? 0;
+            $discount   = $request->discount ?? 0;
+            $total      = $request->total ?? 0;
+            $orders = [];
+            // dd($cartItems);
+            foreach ($cartItems as $item) {
+                $order = Order::create([
+                    'product_id'   => $item->product_id,
+                    'cart_id'      => $item->id,
+                    'user_id'      => $userId,
+                    'address_id'   => $addressId,      // store delivery address
+                    'weight'       => $item->weight,
+                    'quantity'     => $item->quantity,
+                    'price'        => $item->price,
+                    'discount'     => $item->discount ?? 0,
+                    'coupon_code'  => $couponCode,
+                    'total'        => $item->total_amount,
+                    'payment_type' => 1, // 2 = COD
+                    'status'       => 0, // 1 = pending
+                    'merchant_order_id' =>$merchantOrderId,
+                    'order_date'   => now(),
+                    'delivery_date' => now()->addDays(7),
+                ]);
+                $order->load('product');
+                $orders[] = $order;
+            }
+
+        $payload = [
+            "merchantId" => config('services.phonepe.merchant_id'),
+            "merchantOrderId" => $merchantOrderId,
+            "amount" => (int) ($request->total * 100),
+            "expireAfter" => 1200,
+            "paymentFlow" => [
+                "type" => "PG_CHECKOUT",
+                "merchantUrls" => [
+                    "redirectUrl" => route('phonepe.response', [
+                        'merchantOrderId' => $merchantOrderId
+                    ])
+                ]
+            ]
+        ];
+
+        $response = Http::withHeaders([
+            'Content-Type' => 'application/json',
+            'Authorization' => 'O-Bearer ' . $token
+        ])->post(config('services.phonepe.base_url') . '/checkout/v2/pay', $payload);
+
+        $res = $response->json();
+
+        $redirectUrl = $res['redirectUrl'] ?? $res['data']['redirectUrl'] ?? null;
+            
+        if ($redirectUrl) {
+            return response()->json([
+                'status' => true,
+                'redirect_url' => $redirectUrl
+            ]);
+        }
+
+        return response()->json([
+            'status' => false,
+            'error' => $res
+        ]);
+    }
+
+    // 3️⃣ Check Payment Status
+    public function checkPhonePeStatus($merchantOrderId)
+    {
+        $tokenData = $this->getPhonePeToken();
+
+        if (!isset($tokenData['access_token'])) {
+            return $tokenData;
+        }
+
+        $token = $tokenData['access_token'];
+
+        $response = Http::withHeaders([
+            'Content-Type' => 'application/json',
+            'Authorization' => 'O-Bearer ' . $token
+        ])->get(
+            config('services.phonepe.base_url') .
+            "/checkout/v2/order/$merchantOrderId/status"
+        );
+
+        return $response->json();
+    }
+
+    // 4️⃣ PhonePe Redirect Callback
+    // public function phonepeResponse(Request $request)
+    // {
+    //     $merchantOrderId = $request->merchantOrderId;
+
+    //     if (!$merchantOrderId) {
+    //         return redirect('/failed')->with('error', 'Order ID missing');
+    //     }
+
+    //     // $payment = \App\Models\Payment::where('merchant_order_id', $merchantOrderId)->first();
+
+    //     // if (!$payment) {
+    //     //     return redirect('/failed')->with('error', 'Payment not found');
+    //     // }
+
+    //     $status = $this->checkPhonePeStatus($merchantOrderId);
+
+    //     if (isset($status['state']) && $status['state'] === 'COMPLETED') {
+
+    //         // $payment->update(['status' => 'SUCCESS']);
+
+    //         return redirect('/success')->with('success', 'Payment Successful');
+    //     }
+
+    //     // $payment->update(['status' => 'FAILED']);
+
+    //     return redirect('/failed')->with('error', 'Payment Failed');
+    // }
+
+
+    public function phonepeResponse(Request $request)
+    {
+        DB::beginTransaction();
+    
+        try {
+            $userId = auth()->id();
+            $user = auth()->user();
+            
+            $merchantOrderId = $request->merchantOrderId;
+    
+            if (!$merchantOrderId) {
+                return redirect('/failed')->with('error', 'Order ID missing');
+            }
+    
+            $orderIds = session('order_ids');
+            $amount = session('amount');
+    
+            if (is_string($orderIds)) {
+                $orderIds = json_decode($orderIds, true) ?? [$orderIds];
+            }
+    
+            $status = $this->checkPhonePeStatus($merchantOrderId);
+    
+            if (!isset($status['state']) || $status['state'] !== 'COMPLETED') {
+                DB::rollBack();
+                return redirect('/failed')->with('error', 'Payment Failed');
+            }
+            $order = Order::where('user_id',$userId)->where('payment_type',1)->where('status',1)->get();
+            Order::whereIn('id', $orderIds)->update([
+                'status' => 1
+            ]);
+    
+            Order::where('user_id', $userId)->where('status', 7)->delete();
+    
+            $orders = Order::with('product')
+                ->whereIn('id', $orderIds)
+                ->get();
+    
+            PaymentDetail::create([
+                'order_id'          => json_encode($orderIds),
+                'payment_id'        => $merchantOrderId, // PhonePe uses merchantOrderId
+                'razorpay_order_id' => null,
+                'signature'         => null,
+                'amount'            => $amount,
+                'payment_method'    => 'PhonePe',
+                'payment_status'    => 1,
+                'status'            => 1
+            ]);
+    
+            // ✅ CLEAR CART
+            Cart::where('user_id', $userId)->delete();
+    
+            DB::commit();
+    
+            return redirect()->route('payment.success');
+    
+        } catch (\Exception $e) {
+    
+            DB::rollBack();
+    
+            return redirect('/failed')->with('error', $e->getMessage());
+        }
     }
 }

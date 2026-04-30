@@ -128,21 +128,37 @@ document.addEventListener("DOMContentLoaded", function () {
 
 // product slider
 document.addEventListener("DOMContentLoaded", function () {
-  // Correct 4-view Slider Settings
+
+  const isMobile = window.innerWidth < 576;
+
   const swiper = new Swiper("#mainSlider", {
-    slidesPerView: 1, // Mobile
+    slidesPerView: 1, // default mobile
     spaceBetween: 25,
-    loop: true, // Infinite Loop
-    autoplay: { delay: 3500, disableOnInteraction: false },
+    loop: true,
+
+    autoplay: isMobile
+      ? false
+      : {
+          delay: 3500,
+          disableOnInteraction: false,
+          pauseOnMouseEnter: true,
+        },
+
     navigation: {
       nextEl: "#p-next",
       prevEl: "#p-prev",
     },
+
     breakpoints: {
-      576: { slidesPerView: 2 }, // Tablet
-      992: { slidesPerView: 4 }, // Desktop: Shows 4 items
+      576: {
+        slidesPerView: 2, // tablet
+      },
+      992: {
+        slidesPerView: 4, // desktop
+      },
     },
   });
+
 });
 
 // function updateQty(btn, val) {

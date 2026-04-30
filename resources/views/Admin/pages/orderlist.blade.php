@@ -359,6 +359,8 @@
                                 statusBadge = '<span class="badge bg-info">Order Confirm</span>';
                             } else if (order.status == 4) {
                                 statusBadge = '<span class="badge bg-danger">Returned</span>';
+                            }else if (order.status == 5) {
+                                statusBadge = '<span class="badge bg-secoundry">Shipped</span>';
                             }
 
                             html += `
@@ -392,9 +394,9 @@
                                 <div class="col-7">
                                     ${
                                         order.payment_type == 1 
-                                            ? 'COD' 
+                                            ? 'Razorpay' 
                                             : order.payment_type == 2 
-                                                ? 'Razorpay' 
+                                                ? 'COD' 
                                                 : 'N/A'
                                     }
                                 </div>

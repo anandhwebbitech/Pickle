@@ -11,20 +11,20 @@
                 <div class="yp-checkout-section shadow-sm">
                     <div class="yp-section-title"><i class="bi bi-geo-alt-fill"></i> Delivery Address</div>
                     @if($user_delivery_address)
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="yp-address-card active">
-                                    <input type="radio" name="addr" checked>
-                                    {{-- <span class="fw-bold d-block mb-1">Home</span> --}}
-                                    <input type="radio" name="addr" value="{{ $user_delivery_address->id }}" checked>
-                                    <small class="text-muted d-block">{{ $user_delivery_address->address }}</small>
-                                    <small class="text-muted d-block">{{ $user_delivery_address->city }}</small>
-                                    <small class="text-muted d-block">{{ $user_delivery_address->state }} -
-                                        {{ $user_delivery_address->pincode }}</small>
-                                    <small class="fw-bold d-block mt-2">{{$user_delivery_address->mobile }}</small>
-                                </label>
-                            </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="yp-address-card active">
+                                <input type="radio" name="addr" checked>
+                                {{-- <span class="fw-bold d-block mb-1">Home</span> --}}
+                                <input type="radio" name="addr" value="{{ $user_delivery_address->id }}" checked>
+                                <small class="text-muted d-block">{{ $user_delivery_address->address }}</small>
+                                <small class="text-muted d-block">{{ $user_delivery_address->city }}</small>
+                                <small class="text-muted d-block">{{ $user_delivery_address->state }} -
+                                    {{ $user_delivery_address->pincode }}</small>
+                                <small class="fw-bold d-block mt-2">{{$user_delivery_address->mobile }}</small>
+                            </label>
                         </div>
+                    </div>
                     @endif
                     {{-- <button class="btn btn-link text-calor fw-bold text-decoration-none p-0 mt-3 small"
                         data-bs-toggle="modal" data-bs-target="#addAddressModal">
@@ -51,7 +51,7 @@
                 <div class="yp-checkout-section shadow-sm">
                     <div class="yp-section-title"><i class="bi bi-credit-card-fill"></i> Select Payment</div>
                     <div class="yp-payment-option">
-                        <input type="radio" name="payment_method" value="razorpay" id="razorpay" checked>
+                        <input type="radio" name="payment_method" value="phonepe" id="phonepe" checked>
                         <label for="razorpay" class="flex-grow-1 d-flex align-items-center mb-0 ms-2">
                             <span class="fw-bold me-2">Razorpay</span>
                             <small class="text-muted">(UPI, Cards, Netbanking)</small>
@@ -170,6 +170,8 @@
             const csrfToken = "{{ csrf_token() }}";
             const razorpayOrderUrl = "{{ route('razorpay.create.order') }}";
             const paymentSaveUrl = "{{ route('payment.save') }}";
+            const phonepeCreateUrl = "{{ route('phonepe.create') }}";
+
             function handlePayment() {
 
                 // Get selected payment method
@@ -181,7 +183,7 @@
                     Swal.fire("Error", "Please select delivery address", "error");
                     return;
                 }
-
+                
                 // Collect order summary data
                 const subtotal = {{ $subtotal }};
                 const discount = {{ $discount }};
@@ -240,83 +242,43 @@
                     });
                 }
                 // Razorpay Flow
-                else if (paymentMethod === 'razorpay') {
+                else if (paymentMethod === 'phonepe') {
 
-                    fetch(razorpayOrderUrl, {
-                        method: "POST",
-                        headers: {
-                            "X-CSRF-TOKEN": csrfToken,
-                            "Content-Type": "application/json"
-                        },
-                        body: JSON.stringify(payload)
-                    })
+                    Swal.fire({
+                        title: "Proceed to Payment?",
+                        text: "You will be redirected to PhonePe",
+                        icon: "question",
+                        showCancelButton: true,
+                        confirmButtonColor: "#198754",
+                        cancelButtonColor: "#d33",
+                        confirmButtonText: "Yes, Pay Now"
+                    }).then((result) => {
+
+                        if (!result.isConfirmed) return;
+
+                        fetch(phonepeCreateUrl, {
+                            method: "POST",
+                            headers: {
+                                "X-CSRF-TOKEN": csrfToken,
+                                "Content-Type": "application/json"
+                            },
+                            body: JSON.stringify(payload)
+                        })
                         .then(res => res.json())
                         .then(data => {
-
-                            if (!data.status) {
+                            if (data.status) {
+                                // Redirect to PhonePe
+                                 window.location.href = data.redirect_url; 
+                            } else {
                                 Swal.fire("Error", data.message, "error");
-                                return;
                             }
-
-                            var options = {
-                                key: data.key,
-                                amount: data.amount,
-                                currency: "INR",
-                                name: "Your Company Name",
-                                description: "Order Payment",
-                                order_id: data.razorpay_order_id,
-
-                                handler: function (response) {
-
-                                    fetch(paymentSaveUrl, {
-                                        method: "POST",
-                                        headers: {
-                                            "Content-Type": "application/json",
-                                            "X-CSRF-TOKEN": csrfToken
-                                        },
-                                        body: JSON.stringify({
-                                            order_ids: data.order_ids, // ✅ FIXED
-                                            amount: data.amount,
-                                            razorpay_payment_id: response.razorpay_payment_id,
-                                            razorpay_order_id: response.razorpay_order_id,
-                                            razorpay_signature: response.razorpay_signature
-                                        })
-                                    })
-                                        .then(res => res.json())
-                                        .then(result => {
-
-                                            if (result.status === 'success') {
-
-                                                Swal.fire({
-                                                    icon: 'success',
-                                                    title: 'Payment Successful!',
-                                                    confirmButtonColor: '#28a745'
-                                                }).then(() => {
-                                                    window.location.href = result.redirect;
-                                                });
-
-                                            } else {
-                                                Swal.fire("Error", result.message, "error");
-                                            }
-
-                                        });
-
-                                },
-
-                                theme: {
-                                    color: "#dc3545"
-                                }
-                            };
-
-                            var rzp1 = new Razorpay(options);
-                            rzp1.open();
-
                         })
                         .catch(err => {
                             console.error(err);
                             Swal.fire("Error", "Something went wrong", "error");
                         });
 
+                    });
                 }
             }
         </script>

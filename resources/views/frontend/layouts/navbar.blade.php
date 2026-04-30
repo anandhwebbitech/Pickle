@@ -25,6 +25,105 @@
 .search-item:hover {
     background: #f8f8f8;
 }
+ /* Desktop Category Dropdown */
+    .category-dropdown{
+        min-width: 280px;
+        border-radius: 18px;
+        overflow: visible !important;
+        padding: 10px;
+    }
+    .dropdown-menu{
+        overflow: visible !important;
+    }
+
+    .category-item{
+        position: relative;
+    }
+
+    .category-link{
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        padding:12px 14px;
+        border-radius:12px;
+        color:#333;
+        text-decoration:none;
+        transition:.3s;
+        font-weight:500;
+    }
+
+    .category-link:hover{
+        background:#f8f1f5;
+        color:#5E0E3C;
+    }
+
+    .subcategory-menu{
+        position:absolute;
+        left:calc(100% + 10px);
+        top:0;
+        min-width:240px;
+        background:#fff;
+        border-radius:16px;
+        padding:10px;
+        box-shadow:0 10px 30px rgba(0,0,0,.08);
+        display:none;
+        z-index:9999;
+    }
+    .subcategory-menu.show{
+        display:block !important;
+    }
+   
+
+    .subcategory-link{
+        display:block;
+        padding:10px 12px;
+        border-radius:10px;
+        text-decoration:none;
+        color:#555;
+        transition:.3s;
+        font-size:14px;
+    }
+
+    .subcategory-link:hover{
+        background:#f8f1f5;
+        color:#5E0E3C;
+        transform:translateX(3px);
+    }
+
+    /* Mobile Accordion */
+    .mobile-category-btn{
+        background:#fff;
+        border:none;
+        width:100%;
+        text-align:left;
+        padding:14px 16px;
+        border-radius:14px;
+        font-weight:600;
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+    }
+
+    .mobile-subcategory{
+        background:#fff;
+        border-radius:14px;
+        margin-top:8px;
+        padding:10px;
+    }
+
+    .mobile-subcategory a{
+        display:block;
+        padding:10px 12px;
+        text-decoration:none;
+        color:#444;
+        border-radius:10px;
+        transition:.3s;
+    }
+
+    .mobile-subcategory a:hover{
+        background:#f8f1f5;
+        color:#5E0E3C;
+    }
 </style>
 
 <div class="py-2 text-center small fw-bold text-uppercase border-bottom" style="letter-spacing: 2px; font-size: 10px;">
@@ -49,30 +148,75 @@
             </div>
 
             <div class="d-none d-lg-flex align-items-center gap-2">
-                <div class="dropdown">
+                <div class="dropdown" data-bs-auto-close="outside">
                     <button class="nav-link-custom cat-btn dropdown-toggle" type="button" data-bs-toggle="dropdown">
                         <i class="bi bi-grid-fill me-1"></i> Categories
                     </button>
-                    <ul class="dropdown-menu border-0 shadow-lg">
-                        {{-- <li><a class="dropdown-item" href="#">🌿 Organic Pulses</a></li>
-                        <li><a class="dropdown-item" href="#">🍯 Pure Honey</a></li>
-                        <li><a class="dropdown-item" href="#">🥜 Premium Nuts</a></li> --}}
+                    <ul class="dropdown-menu border-0 shadow-lg category-dropdown">
+
                         @foreach($categories as $category)
-                        @php
-                            $icons = [
-                                'Organic Pulses' => 'bi-flower1',
-                                'Pure Honey' => 'bi-droplet',
-                                'Premium Nuts' => 'bi-basket',
-                            ];
-                        @endphp
-                            <li>
-                                <a class="dropdown-item" 
-                                href="{{ route('product', ['category' => $category->id]) }}">
-                                <i class="bi {{ $icons[$category->name] ?? 'bi-tag' }}"></i>
-                                    {{ $category->name }}
-                                </a>
+
+                            <li class="category-item position-relative">
+
+                                <div class="d-flex justify-content-between align-items-center category-link">
+
+                                    {{-- Category Link --}}
+                                    <a href="{{ route('product', ['category' => $category->id]) }}"
+                                    class="text-decoration-none text-dark flex-grow-1">
+
+                                        {{ $category->name }}
+
+                                    </a>
+
+                                    {{-- Toggle Button --}}
+                                    @if($category->subcategories->count())
+
+                                        <button type="button"
+                                                class="border-0 bg-transparent sub-toggle-btn"
+                                                onclick="toggleSubmenu(event, this)">
+
+                                            <i class="bi bi-chevron-right"></i>
+
+                                        </button>
+
+                                    @endif
+
+                                </div>
+
+                                {{-- Sub Categories --}}
+                                @if($category->subcategories->count())
+
+                                    <div class="subcategory-menu">
+
+                                        <a href="{{ route('product', ['category' => $category->id]) }}"
+                                        class="subcategory-link fw-bold text-calor">
+
+                                            View All
+
+                                        </a>
+
+                                        @foreach($category->subcategories as $sub)
+
+                                            <a href="{{ route('product', [
+                                                    'category' => $category->id,
+                                                    'subcategory' => $sub->id
+                                                ]) }}"
+                                            class="subcategory-link">
+
+                                                {{ $sub->sub_category_name }}
+
+                                            </a>
+
+                                        @endforeach
+
+                                    </div>
+
+                                @endif
+
                             </li>
+
                         @endforeach
+
                     </ul>
                 </div>
                 <a href="{{route('home')}}" class="nav-link-custom">Home</a>
@@ -179,20 +323,62 @@
         </nav>
 
         <div class="mt-4">
-            <h6 class="fw-bold text-muted small text-uppercase">Categories</h6>
-            {{-- <div class="d-grid gap-2 mt-3">
-                <a href="#" class="btn btn-light text-start rounded-4 p-3">🌿 Organic Pulses</a>
-                <a href="#" class="btn btn-light text-start rounded-4 p-3">🍯 Pure Honey</a>
-                <a href="#" class="btn btn-light text-start rounded-4 p-3">🥜 Premium Nuts</a>
-            </div> --}}
-            <div class="d-grid gap-2 mt-3">
+
+            <h6 class="fw-bold text-white small text-uppercase mb-3">
+                Categories
+            </h6>
+
+            <div class="accordion" id="mobileCategoryAccordion">
+
                 @foreach($categories as $category)
-                    <a href="{{ route('product', ['category' => $category->id]) }}" 
-                    class="btn btn-light text-start rounded-4 p-3">
-                        {{ $category->name }}
-                    </a>
+
+                    <div class="mb-2">
+
+                        <button class="mobile-category-btn"
+                                type="button"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#mobileCat{{ $category->id }}">
+
+                            {{ $category->name }}
+
+                            <i class="bi bi-chevron-down"></i>
+
+                        </button>
+
+                        <div id="mobileCat{{ $category->id }}"
+                             class="collapse"
+                             data-bs-parent="#mobileCategoryAccordion">
+
+                            <div class="mobile-subcategory">
+
+                                <a href="{{ route('product', ['category' => $category->id]) }}"
+                                   class="fw-bold text-calor">
+                                    View All
+                                </a>
+
+                                @foreach($category->subcategories as $sub)
+
+                                    <a href="{{ route('product', [
+                                            'category' => $category->id,
+                                            'subcategory' => $sub->id
+                                        ]) }}">
+
+                                        {{ $sub->sub_category_name }}
+
+                                    </a>
+
+                                @endforeach
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
                 @endforeach
+
             </div>
+
         </div>
     </div>
 </div>
@@ -224,3 +410,34 @@
         </div> --}}
     </div>
 </div>
+<script>
+    function toggleSubmenu(event, button) {
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        let parent = button.closest('.category-item');
+        let submenu = parent.querySelector('.subcategory-menu');
+
+        // close others
+        document.querySelectorAll('.subcategory-menu').forEach(menu => {
+
+            if(menu !== submenu){
+                menu.classList.remove('show');
+            }
+
+        });
+
+        submenu.classList.toggle('show');
+    }
+
+    // prevent submenu click close
+    document.querySelectorAll('.subcategory-menu').forEach(menu => {
+
+        menu.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+
+    });
+
+</script>

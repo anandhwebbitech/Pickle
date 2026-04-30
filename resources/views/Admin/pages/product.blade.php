@@ -168,6 +168,12 @@
                                         @endforeach
                                     </select>
                                 </div>
+                                <div class="col-md-4">
+                                    <label>Sub Category</label>
+                                    <select name="sub_category_id" class="form-control" id="subCategorySelect">
+                                        <option value="">Select Sub Category</option>
+                                    </select>
+                                </div>
 
                                 <!-- Deals + South Indian -->
                                 <div class="col-md-4 d-flex align-items-center gap-4 mt-4">
@@ -184,7 +190,7 @@
 
                                 <!-- Image -->
                                 <div class="col-md-4">
-                                    <label>Image (Max 2)</label>
+                                    <label>Image (Max 4)</label>
                                     <input type="file" name="images[]" class="form-control" multiple accept="image/*"
                                         id="imageInput">
                                 </div>
@@ -338,7 +344,7 @@
 
 
                                 <div class="col-md-4">
-                                    <label>Image (Max 2)</label>
+                                    <label>Image (Max 4)</label>
                                     <input type="file" name="images[]" class="form-control" multiple accept="image/*"
                                         id="imageInput">
                                 </div>
@@ -394,8 +400,8 @@
     <script>
 
         document.getElementById('imageInput').addEventListener('change', function () {
-            if (this.files.length > 2) {
-                alert("You can select maximum 2 images only.");
+            if (this.files.length > 4) {
+                alert("You can select maximum 4 images only.");
                 this.value = "";
             }
         });
@@ -543,63 +549,63 @@
                 ]
             });
             $('#addProductForm').on('submit', function (e) {
-            e.preventDefault();
+                e.preventDefault();
 
-            let form = this;
-            let formData = new FormData(form);
+                let form = this;
+                let formData = new FormData(form);
 
-            $.ajax({
-                url: "{{ route('products.store') }}",
-                type: "POST",
-                data: formData,
-                processData: false,   // Important for FormData
-                contentType: false,   // Important for FormData
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                },
+                $.ajax({
+                    url: "{{ route('products.store') }}",
+                    type: "POST",
+                    data: formData,
+                    processData: false,   // Important for FormData
+                    contentType: false,   // Important for FormData
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
 
-                beforeSend: function () {
-                    // Optional: Disable button to prevent double click
-                    $('#addProductForm button[type="submit"]').prop('disabled', true);
-                },
+                    beforeSend: function () {
+                        // Optional: Disable button to prevent double click
+                        $('#addProductForm button[type="submit"]').prop('disabled', true);
+                    },
 
-                success: function (response) {
+                    success: function (response) {
 
-                    $('#addProductModal').modal('hide');
-                    form.reset();
-                    $('#weightPriceWrapper').html('');
+                        $('#addProductModal').modal('hide');
+                        form.reset();
+                        $('#weightPriceWrapper').html('');
 
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Added!',
-                        text: response.message ?? 'Product added successfully',
-                        timer: 1500,
-                        showConfirmButton: false
-                    });
-                    window.location.reload(); 
-                },
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Added!',
+                            text: response.message ?? 'Product added successfully',
+                            timer: 1500,
+                            showConfirmButton: false
+                        });
+                        window.location.reload(); 
+                    },
 
-                error: function (xhr) {
+                    error: function (xhr) {
 
-                    let message = 'Something went wrong';
+                        let message = 'Something went wrong';
 
-                    if (xhr.status === 422 && xhr.responseJSON.errors) {
-                        let errors = xhr.responseJSON.errors;
-                        message = Object.values(errors)[0][0];
+                        if (xhr.status === 422 && xhr.responseJSON.errors) {
+                            let errors = xhr.responseJSON.errors;
+                            message = Object.values(errors)[0][0];
+                        }
+
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Validation Error',
+                            text: message
+                        });
+                    },
+
+                    complete: function () {
+                        $('#addProductForm button[type="submit"]').prop('disabled', false);
                     }
-
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Validation Error',
-                        text: message
-                    });
-                },
-
-                complete: function () {
-                    $('#addProductForm button[type="submit"]').prop('disabled', false);
-                }
+                });
             });
-        });
 
         });
         $(document).on('click', '.editBtn', function () {
@@ -735,6 +741,31 @@
                     });
                 }
             });
+        });
+
+        $('select[name="category_id"]').on('change', function () {
+            let categoryId = $(this).val();
+
+            if (categoryId) {
+                let url = "{{ route('get.subcategories', ':id') }}".replace(':id', categoryId);
+
+                $.ajax({
+                    url: url,
+                    type: "GET",
+                    success: function (res) {
+
+                        let options = '<option value="">Select Sub Category</option>';
+
+                        res.forEach(function (item) {
+                            options += `<option value="${item.id}">${item.sub_category_name}</option>`;
+                        });
+
+                        $('#subCategorySelect').html(options);
+                    }
+                });
+            } else {
+                $('#subCategorySelect').html('<option value="">Select Sub Category</option>');
+            }
         });
     </script>
 

@@ -216,7 +216,7 @@
                      style="width:50px; height:50px; object-fit:cover; border-radius:8px;">
 
                 <div class="flex-grow-1">
-                    <div class="fw-semibold">${product.name}</div>
+                    <div class="fw-semibold">${product.name} </div>
                 </div>
             </div>
         `;

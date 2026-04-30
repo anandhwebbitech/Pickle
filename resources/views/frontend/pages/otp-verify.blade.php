@@ -62,7 +62,12 @@
 const inputs = document.querySelectorAll('.yp-otp-input');
 const finalOtp = document.getElementById('finalOtp');
 const form = document.getElementById('ypOtpForm');
-
+// 🔥 Auto focus first OTP box
+    window.addEventListener('DOMContentLoaded', function () {
+        if (inputs.length > 0) {
+            inputs[0].focus();
+        }
+    });
 // Move focus & allow only numbers
 inputs.forEach((input, index) => {
 

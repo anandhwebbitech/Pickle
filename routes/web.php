@@ -72,6 +72,16 @@ Route::middleware('auth')->group(function () {
     Route::post('/profile-update/{id}', [AuthController::class, 'update'])->name('profile.update');
 
 });
+
+Route::post('/phonepe/create', [FrontendController::class, 'createPhonePe'])->name('phonepe.create');
+Route::get('/phonepe/response', [FrontendController::class, 'phonepeResponse'])->name('phonepe.response');
+Route::get('/success', function () {
+    return view('frontend.pages.success');
+})->name('payment.success');
+
+Route::get('/failed', function () {
+    return view('frontend.pages.failed');
+})->name('payment.failed');
 Route::post('/add-to-cart/{id}', [FrontendController::class, 'addToCart'])->name('cart.add');
 
 Route::get('/admin-login', [AdminController::class,'Login'])->name('adminlogin');
@@ -80,13 +90,35 @@ Route::post('/login', [AdminController::class, 'LoginCheck'])->name('login.submi
 Route::middleware(['admin'])->group(function () {
     Route::get('/admin-dashboard', [AdminController::class,'Dashboard'])->name('adminhome');
     Route::get('/admin-product', [AdminController::class,'Product'])->name('productpage');
+
+    Route::get('/admin-banner', [AdminController::class,'Banner'])->name('bannerpage');
+
+    Route::post('/banners/store', [AdminController::class, 'Bannerstore'])->name('banners.store');
+    Route::post('/banners/update/{id}', [AdminController::class, 'Bannerupdate'])->name('banners.update');
+    Route::delete('/banners/delete/{id}', [AdminController::class, 'Bannerdestroy'])->name('banners.destroy');
+
+    Route::get('/admin-shorts', [AdminController::class,'Shorts'])->name('shorts.page');
+
+    Route::post('/shorts/store', [AdminController::class,'ShortsStore'])->name('shorts.store');
+    Route::post('/shorts/update/{id}', [AdminController::class,'ShortsUpdate'])->name('shorts.update');
+    Route::delete('/shorts/delete/{id}', [AdminController::class,'ShortsDelete'])->name('shorts.destroy');
+
     Route::get('/admin-category', [AdminController::class,'Categories'])->name('categoriespage');
     Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
     Route::post('/categories', [CategoryController::class, 'Store'])->name('categories.store');
     Route::get('/categories/{id}/edit', [CategoryController::class, 'edit'])->name('categories.edit');
     Route::delete('/categories/{id}', [CategoryController::class, 'destroy'])->name('categories.destroy');
     Route::put('/categories/{id}', [CategoryController::class, 'update'])->name('admin.categoryupdate');
+
+    Route::get('/admin-sub-category', [AdminController::class,'SubCategories'])->name('subcategoriespage');
+    Route::get('/subcategories', [AdminController::class,'SubCategoryIndex'])->name('subcategories.index');
+    Route::post('/subcategories', [AdminController::class,'SubCategoryStore'])->name('subcategories.store');
+    Route::put('/subcategories/{id}', [AdminController::class,'SubCategoryUpdate'])->name('subcategories.update');
+    Route::delete('/subcategories/{id}', [AdminController::class,'SubCategoryDelete'])->name('subcategories.destroy');
+
     Route::post('/products', [ProductController::class, 'store'])->name('products.store');
+    Route::get('/get-subcategories/{id}', [ProductController::class, 'getSubCategories'])->name('get.subcategories');
+
     Route::get('/admin-products', [ProductController::class, 'index'])->name('products.index');
     Route::get('products/{id}/edit', [ProductController::class, 'edit'])->name('products.edit');
     Route::put('products/{id}', [ProductController::class, 'update'])->name('products.update');

@@ -29,11 +29,30 @@
     <div class="section-title">Management</div>
     <ul class="sidebar-menu">
         <li>
+            <a href="{{ route('bannerpage') }}">
+                <i class="bi bi-grid"></i>
+                <span class="menu-text">Banner</span>
+            </a>
+        </li>
+        <li>
+            <a href="{{ route('shorts.page') }}">
+                <i class="bi bi-grid"></i>
+                <span class="menu-text">Shorts</span>
+            </a>
+        </li>
+        <li>
             <a href="{{ route('categoriespage') }}">
                 <i class="bi bi-grid"></i>
                 <span class="menu-text">Categories</span>
             </a>
         </li>
+        <li>
+            <a href="{{ route('subcategoriespage') }}">
+                <i class="bi bi-grid"></i>
+                <span class="menu-text">Sub Categories</span>
+            </a>
+        </li>
+
 
         <li>
             <a href="{{ route('productpage') }}">
