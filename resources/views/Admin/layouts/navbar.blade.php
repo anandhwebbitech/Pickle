@@ -13,7 +13,7 @@
             <button class="sidebar-toggle-btn d-lg-none" id="toggleSidebar">☰</button>
 
             <div class="brand">
-                ANNI'S <span>PICKLE</span>
+                AnNi'S <span>Kitchen</span>
             </div>
         </div>
 
@@ -22,14 +22,14 @@
 
             <li class="nav-item w-100 w-lg-auto">
                 <div class="nav-pill">
-                    📞 <a href="tel:+919876543210" class="nav-link">+91 98765 43210</a>
+                    📞 <a href="tel:+919677739608" class="nav-link">+91 9677739608</a>
                 </div>
             </li>
 
             <li class="nav-item w-100 w-lg-auto">
                 <div class="nav-pill">
-                    ✉️ <a href="mailto:pickle@gmail.com" class="nav-link">
-                        pickle@gmail.com
+                    ✉️ <a href="mailto:info@anniskitchen.com" class="nav-link">
+                        info@anniskitchen.com
                     </a>
                 </div>
             </li>

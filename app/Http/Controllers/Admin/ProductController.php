@@ -193,12 +193,13 @@ class ProductController extends Controller
         $product = Product::findOrFail($id);
 
         $data = $request->validate([
-            'name'        => 'required|string|max:255',
-            'category_id' => 'required|integer',
-            'quantity'    => 'nullable|numeric',
-            'description' => 'nullable',
-            'images'      => 'nullable|array|max:2',
-            'images.*'    => 'image|mimes:jpeg,png,jpg,webp|max:2048',
+            'name'              => 'required|string|max:255',
+            'category_id'       => 'required|integer',
+            'sub_category_id'   => 'nullable|integer',
+            'quantity'          => 'nullable|numeric',
+            'description'       => 'nullable',
+            'images'            => 'required|array|max:4',
+            'images.*'          => 'image|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
 
         // ❌ Remove images from validated data
@@ -231,7 +232,7 @@ class ProductController extends Controller
 
             $data['image'] = json_encode($imagePaths);
         }
-
+        $data['sub_category_id'] = $request->sub_category_id;
         $data['deals'] = $request->deals ? 1 : 0;
         $data['south_indian'] = $request->south_indian ? 1 : 0;
         $data['weight'] = json_encode($request->weights ?? []);

@@ -34,6 +34,7 @@ class AuthController extends Controller
             ], 422);
         }
         $otp = random_int(1000, 9999);
+        $message = "Welcome to the family! Your registration OTP for AnNi's Kitchen is $otp, valid for 10 mins. Explore our delicious menu at: www.anniskitchen.com";
 
         $user = User::create([
             'name'     => $request->name,
@@ -49,6 +50,10 @@ class AuthController extends Controller
                 ->subject('Your Login OTP')
                 ->from($user->email, $user->name);
         });
+        if ($user->phone) {
+            $templateId = env('SMS_REGISTER_TEMPLATE_ID');
+            sendSMS($user->phone, $message, $templateId);
+        }
         session(['otp_email' => $user->email]);
         return response()->json([
             'status' => true,
@@ -56,10 +61,7 @@ class AuthController extends Controller
 
             'redirect' => route('otp')
         ]);
-        // Auth::login($user);
-        // return response()->json([
-        //     'message' => 'Account created successfully!'
-        // ]);
+
     }
     public function login1(Request $request)
     {
@@ -85,154 +87,7 @@ class AuthController extends Controller
             'message' => 'Invalid email or password'
         ]);
     }
-    // public function login(Request $request)
-    // {
-    //     $request->validate([
-    //         'email' => 'required|email',
-    //         'password' => 'required'
-    //     ]);
-
-    //     // First check if user exists
-    //     $user = User::where('email', $request->email)->first();
-
-    //     if (!$user) {
-    //         return response()->json([
-    //             'status' => false,
-    //             'message' => 'Invalid email or password'
-    //         ]);
-    //     }
-
-    //     // ðŸš« Block users with role = 1
-    //     if ($user->role == 1) {
-    //         return response()->json([
-    //             'status' => false,
-    //             'message' => 'Invalid email or password'
-    //         ]);
-    //     }
-
-
-    //     // âœ… Generate OTP
-    //     $otp = rand(100000, 999999);
-    //     $user->update([
-    //         'otp' => $otp,
-    //         'otp_expires_at' => Carbon::now()->addMinutes(5)
-    //     ]);
-
-    //     // âœ… Send OTP Mail
-    //     // Mail::send('frontend.pages.otp_email', ['otp' => $otp, 'user' => $user], function ($message) use ($user) {
-    //     //     $message->to($user->email)
-    //     //         ->subject('Your Login OTP');
-    //     // });
-    //     Mail::send('frontend.pages.otp_email', ['otp' => $otp, 'user' => $user], function ($message) use ($user) {
-    //         $message->to($user->email)
-    //             ->subject('Your Login OTP')
-    //             ->from($user->email, $user->name);
-    //     });
-
-
-
-    //     // Attempt login
-    //     if (Auth::attempt([
-    //         'email' => $request->email,
-    //         'password' => $request->password
-    //     ])) {
-    //         $user = Auth::user();
-
-    //         // âœ… Merge guest wishlist after login
-    //         if (session()->has('guest_wishlist')) {
-
-    //             $guestWishlist = session()->get('guest_wishlist', []);
-    //             $userKey = 'wishlist_' . $user->id;
-
-    //             $userWishlist = session()->get($userKey, []);
-
-    //             $mergedWishlist = $userWishlist + $guestWishlist;
-
-    //             session()->put($userKey, $mergedWishlist);
-    //             session()->forget('guest_wishlist');
-    //         }
-    //         // ðŸ”¥ MOVE GUEST CART TO DATABASE
-    //         if (session()->has('guest_cart')) {
-
-    //             $guestCart = session()->get('guest_cart');
-
-    //             foreach ($guestCart as $item) {
-
-    //                 $existingCart = Cart::where('user_id', $user->id)
-    //                     ->where('product_id', $item['product_id'])
-    //                     ->where('weight', $item['weight'])
-    //                     ->first();
-
-    //                 if ($existingCart) {
-    //                     $existingCart->quantity += $item['quantity'];
-    //                     $existingCart->total_amount = $existingCart->quantity * $existingCart->price;
-    //                     $existingCart->save();
-    //                 } else {
-    //                     Cart::create([
-    //                         'user_id'      => $user->id,
-    //                         'product_id'   => $item['product_id'],
-    //                         'category_id'  => $item['category_id'],
-    //                         'quantity'     => $item['quantity'],
-    //                         'weight'       => $item['weight'],
-    //                         'price'        => $item['price'],
-    //                         'discount'     => 0,
-    //                         'total_amount' => $item['price'] * $item['quantity'],
-    //                         'status'       => 1
-    //                     ]);
-    //                 }
-    //             }
-
-    //             session()->forget('guest_cart');
-    //         }
-
-
-    //         return response()->json([
-    //             'status' => true,
-    //             'message' => 'Login successful!',
-    //             'redirect' => route('home')
-    //         ]);
-    //     }
-
-    //     return response()->json([
-    //         'status' => false,
-    //         'message' => 'Invalid email or password'
-    //     ]);
-    // }
-
-    // public function verifyOtp(Request $request)
-    // {
-    //     $request->validate([
-    //         'email' => 'required|email',
-    //         'otp'   => 'required'
-    //     ]);
-
-    //     $user = User::where('email', $request->email)
-    //         ->where('otp', $request->otp)
-    //         ->where('otp_expires_at', '>=', now())
-    //         ->first();
-
-    //     if (!$user) {
-    //         return response()->json([
-    //             'status' => false,
-    //             'message' => 'Invalid or expired OTP'
-    //         ]);
-    //     }
-
-    //     // âœ… Login user after OTP verification
-    //     Auth::login($user);
-
-    //     // Clear OTP
-    //     $user->update([
-    //         'otp' => null,
-    //         'otp_expires_at' => null
-    //     ]);
-
-    //     return response()->json([
-    //         'status' => true,
-    //         'message' => 'Login successful!',
-    //         'redirect' => route('home')
-    //     ]);
-    // }
+   
     public function login(Request $request)
     {
         $request->validate([
@@ -241,7 +96,6 @@ class AuthController extends Controller
         ]);
 
         $user = User::where('email', $request->email)->first();
-
         if (!$user || $user->role == 1) {
             return response()->json([
                 'status' => false,
@@ -256,21 +110,30 @@ class AuthController extends Controller
                 'message' => 'Invalid email or password'
             ]);
         }
-
         // âœ… Generate OTP
         $otp = random_int(1000, 9999);
         $user->update([
             'otp' => $otp,
             'otp_expires_at' => Carbon::now()->addMinutes(5)
         ]);
-
+        $message = "Your AnNi's Kitchen login code is: $otp. Valid for 5 minutes.";
         // // âœ… Send OTP Mail (CORRECT FROM)
-        Mail::send('frontend.pages.otp_email', ['otp' => $otp, 'user' => $user], function ($message) use ($user) {
-            $message->to($user->email)
+
+        Mail::send('frontend.pages.otp_email', ['otp' => $otp, 'user' => $user], function ($mail) use ($user) {
+            $mail->to($user->email)
                 ->subject('Your Login OTP')
-                ->from($user->email, $user->name);
+                ->from('info@anniskitchen.com', 'AnNi\'s Kitchen');
         });
+    // dd(7);
+
+        if ($user->phone) {
+            $message = "Your AnNi's Kitchen login code is: $otp. Valid for 5 minutes. Don't share this code with anyone.";
+            $templateId = env('SMS_LOGIN_TEMPLATE_ID');
+            // dd(sendSMS($user->phone, $message, $templateId));
+            sendSMS($user->phone, $message, $templateId);
+        }
         session(['otp_email' => $user->email]);
+
 
         return response()->json([
             'status' => true,

@@ -16,6 +16,7 @@ class CouponController extends Controller
 
         return response()->json([
             'data' => $coupons->map(function ($coupon) {
+                $checked = $coupon->is_show ? 'checked' : '';
                 return [
                     'id'     => $coupon->id,
                     'code'   => $coupon->code,
@@ -25,6 +26,20 @@ class CouponController extends Controller
                                         ? \Carbon\Carbon::parse($coupon->expiry_date)->format('d-M-Y') 
                                         : null,
                     'use_limit'  => $coupon->use_limit,
+                    // ✅ FEATURE TOGGLE
+                    'featured' => '
+                        <div class="form-check form-switch d-flex justify-content-center">
+                            <input
+                                class="form-check-input featureToggle"
+                                type="radio"
+                                name="featured_coupon"
+                                data-id="'.$coupon->id.'"
+                                '.$checked.'
+                                style="cursor:pointer;"
+                            >
+                        </div>
+                    ',
+
                     'status' => $coupon->status == 1
                         ? '<span class="badge-active">Active</span>'
                         : '<span class="badge-inactive">Inactive</span>',
@@ -109,6 +124,25 @@ public function destroy($id)
     return response()->json([
         'success' => true,
         'message' => 'Coupon deleted successfully'
+    ]);
+}
+
+public function featureToggle(Request $request)
+{
+    // REMOVE OLD ACTIVE
+    Coupon::query()->update([
+        'is_show' => 0
+    ]);
+
+    // SET NEW ACTIVE
+    Coupon::where('id', $request->id)
+        ->update([
+            'is_show' => 1
+        ]);
+
+    return response()->json([
+        'status' => true,
+        'message' => 'Featured coupon updated successfully'
     ]);
 }
 }

@@ -326,6 +326,13 @@
                                     </select>
                                 </div>
 
+                                <div class="col-md-4">
+                                    <label>Sub Category</label>
+                                    <select name="sub_category_id" id="edit_sub_category" class="form-control">
+                                        <option value="">Select Sub Category</option>
+                                    </select>
+                                </div>
+
                                 <div class="col-md-4 d-flex gap-4 mt-4 p-4">
                                     <div class="form-check">
                                         <input type="checkbox" name="deals" id="edit_deals" value="1"
@@ -616,7 +623,13 @@
 
                 $('#edit_id').val(res.id);
                 $('#edit_name').val(res.name);
-                $('#edit_category').val(res.category_id);
+                 $('#edit_category').val(res.category_id).trigger('change');
+
+                setTimeout(() => {
+
+                    $('#edit_sub_category').val(res.sub_category_id);
+
+                }, 500);
                 $('#edit_quantity').val(res.quantity);
                 $('#edit_description').val(res.description);
                 $('#edit_deals').prop('checked', res.deals == 1);
@@ -743,7 +756,7 @@
             });
         });
 
-        $('select[name="category_id"]').on('change', function () {
+        $('#addProductForm select[name="category_id"]').on('change', function () {
             let categoryId = $(this).val();
 
             if (categoryId) {
@@ -765,6 +778,45 @@
                 });
             } else {
                 $('#subCategorySelect').html('<option value="">Select Sub Category</option>');
+            }
+        });
+
+        // EDIT PRODUCT
+        $('#edit_category').on('change', function () {
+
+            let categoryId = $(this).val();
+
+            if (categoryId) {
+
+                let url = "{{ route('get.subcategories', ':id') }}"
+                            .replace(':id', categoryId);
+
+                $.ajax({
+                    url: url,
+                    type: "GET",
+
+                    success: function (res) {
+
+                        let options = '<option value="">Select Sub Category</option>';
+
+                        res.forEach(function (item) {
+
+                            options += `
+                                <option value="${item.id}">
+                                    ${item.sub_category_name}
+                                </option>
+                            `;
+                        });
+
+                        $('#edit_sub_category').html(options);
+                    }
+                });
+
+            } else {
+
+                $('#edit_sub_category').html(
+                    '<option value="">Select Sub Category</option>'
+                );
             }
         });
     </script>

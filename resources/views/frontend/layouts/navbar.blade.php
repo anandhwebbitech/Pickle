@@ -223,6 +223,7 @@
                 <a href="{{route('product')}}" class="nav-link-custom">Shop Now</a>
                 <a href="{{route('wishlist')}}" class="nav-link-custom">Wishlist</a>
                 <a href="{{route('contact')}}" class="nav-link-custom">Contact</a>
+                
             </div>
 
             <div class="d-flex align-items-center gap-2">

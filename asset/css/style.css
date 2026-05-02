@@ -287,8 +287,16 @@ a {
 /* Essential: The slider needs a defined height to be visible */
 .bannerSwiper {
     width: 100%;
-    height: 500px;
+    max-width: 1296px !important;
+    height: 550px;
+
     border-radius: 40px;
+}
+
+@media (max-width: 768px) {
+    .bannerSwiper {
+        height: 265px;
+    }
 }
 
 .banner-content {
@@ -1973,13 +1981,16 @@ body {
     margin-top: 60px;
     border-left: 5px solid #5E0E3C;
 }
+
 .text-calor {
     color: #5E0E3C;
     font-weight: 700;
 }
+
 .text-ylo {
     color: #ffebeb;
 }
+
 .butn-calor {
     background-color: #5E0E3C;
     color: #ffffff;
@@ -2016,7 +2027,8 @@ body {
 .promo-content {
     position: relative;
     z-index: 2;
-    color: #fff; /* makes text visible on dark overlay */
+    color: #fff;
+    /* makes text visible on dark overlay */
 }
 
 .pic-font {
@@ -2072,6 +2084,7 @@ body {
 .promo-bg {
     background-color: #5E0E3C;
 }
+
 .promo-inner-container {
     background: #fffafa;
     border: 1px solid #5e0e3b62;

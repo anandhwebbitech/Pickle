@@ -20,10 +20,15 @@ use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Http;
-
-
+use App\Services\BlueDartService;
 class FrontendController extends Controller
 {
+     protected $blueDart;
+
+    public function __construct(BlueDartService $blueDart)
+    {
+        $this->blueDart = $blueDart;
+    }
     //
     public function Home()
     {
@@ -47,7 +52,8 @@ class FrontendController extends Controller
         $shorts = Short::where('status',1)->get();
         // Get only product IDs
         $wishlistIds = array_keys($wishlist);
-        return view('frontend.pages.index', compact('products', 'wishlistIds', 'categories', 'treding_deals', 'south_indian','banners','shorts'));
+        $showcoupon = Coupon::where('is_show',1)->first();
+        return view('frontend.pages.index', compact('products', 'wishlistIds', 'categories', 'treding_deals', 'south_indian','banners','shorts','showcoupon'));
     }
     public function About()
     {
@@ -1878,6 +1884,16 @@ class FrontendController extends Controller
                     ->subject('Order Confirmation - COD')
                     ->from($data['email'], $data['fullname']);
             });
+            if ($user->phone) {
+
+                $orderNumber = 'AK' . str_pad($orders[0]->id, 5, '0', STR_PAD_LEFT);
+
+                $smsMessage = "Thank you for ordering from AnNi's Kitchen! Your order #$orderNumber is confirmed and being prepared with love. To satisfy more cravings, visit: www.anniskitchen.com";
+
+                $templateId = env('SMS_ORDER_TEMPLATE_ID');
+
+                sendSMS($user->phone, $smsMessage, $templateId);
+            }
             return response()->json([
                 'status'   => true,
                 'redirect' => route('product') // you can redirect to order confirmation page
@@ -1948,7 +1964,24 @@ class FrontendController extends Controller
                 'amount'   => $request->total * 100,
                 'currency' => 'INR'
             ]);
+            $shipment = $this->blueDart->createShipment([
+                "Request" => [
+                    "Consignee" => [
+                        "Name" => $user->name,
+                        "Address1" => "Customer Address",
+                        "MobileNo" => $user->phone,
+                        "Pincode" => "600001",
+                    ],
 
+                    "Services" => [
+                        "ProductCode" => "A",
+                        "ActualWeight" => 1,
+                        "CollectableAmount" => 0,
+                        "Commodity" => "Food Products",
+                    ]
+                ]
+            ]);
+           
             DB::commit();
 
             return response()->json([
@@ -2017,6 +2050,69 @@ class FrontendController extends Controller
             $orders = Order::with('product')
                 ->whereIn('id', $orderIds)
                 ->get();
+                // SEND ORDER MAIL
+            $data = [
+                'fullname'   => $user->name,
+                'email'      => $user->email,
+                'orders'     => $orders,
+                'order_date' => now(),
+            ];
+
+            Mail::send('frontend.pages.order_email', $data, function ($message) use ($data) {
+
+                $message->to($data['email'])
+                    ->subject('Order Confirmation - Online Payment')
+                    ->from('info@anniskitchen.com', 'AnNi\'s Kitchen');
+            });
+
+
+            // SEND ORDER SMS
+            if ($user->phone) {
+
+                $orderNumber = 'AK' . str_pad($orders[0]->id, 5, '0', STR_PAD_LEFT);
+
+                $smsMessage = "Thank you for ordering from AnNi's Kitchen! Your order #$orderNumber is confirmed and being prepared with love. To satisfy more cravings, visit: www.anniskitchen.com";
+
+                $templateId = env('SMS_ORDER_TEMPLATE_ID');
+
+                sendSMS($user->phone, $smsMessage, $templateId);
+            }
+            // BLUEDART SHIPMENT CREATE
+            foreach ($orders as $order) {
+
+                $shipment = $this->blueDart->createShipment([
+
+                    "Request" => [
+
+                        "Consignee" => [
+
+                            "Name"      => $user->name,
+                            "Address1"  => optional($order->address)->address ?? 'Customer Address',
+                            "MobileNo"  => $user->phone,
+                            "Pincode"   => optional($order->address)->pincode ?? '600001',
+                        ],
+
+                        "Services" => [
+
+                            "ProductCode"      => "A",
+                            "ActualWeight"     => 1,
+                            "CollectableAmount"=> 0,
+                            "Commodity"        => $order->product->name ?? 'Food Product',
+                        ]
+                    ]
+                ]);
+
+                \Log::info($shipment);
+
+                // SAVE AWB
+                if (isset($shipment['AWBNo'])) {
+
+                    $order->update([
+                        'awb_number'  => $shipment['AWBNo'],
+                        'courier_name'=> 'BlueDart'
+                    ]);
+                }
+            }
 
             // ✅ Create payment row for EACH order
 
@@ -2047,6 +2143,17 @@ class FrontendController extends Controller
             //         ->subject('Order Confirmation - Online Payment')
             //         ->from($data['email'], $data['fullname']);
             // });
+             if ($user->phone) {
+
+                $orderNumber = 'AK' . str_pad($orders[0]->id, 5, '0', STR_PAD_LEFT);
+
+                $smsMessage = "Thank you for ordering from AnNi's Kitchen! Your order #$orderNumber is confirmed and being prepared with love. To satisfy more cravings, visit: www.anniskitchen.com";
+
+                $templateId = env('SMS_ORDER_TEMPLATE_ID');
+
+                sendSMS($user->phone, $smsMessage, $templateId);
+            }
+
             DB::commit();
 
             return response()->json([
@@ -2538,5 +2645,24 @@ class FrontendController extends Controller
     
             return redirect('/failed')->with('error', $e->getMessage());
         }
+    }
+    public function trackOrder($id)
+    {
+        $order = Order::findOrFail($id);
+
+        if (!$order->awb_number) {
+
+            return response()->json([
+                'status' => false,
+                'message' => 'AWB number not found'
+            ]);
+        }
+
+        $tracking = $this->blueDart->trackShipment($order->awb_number);
+
+        return response()->json([
+            'status' => true,
+            'tracking' => $tracking
+        ]);
     }
 }

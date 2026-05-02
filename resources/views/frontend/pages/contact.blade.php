@@ -102,7 +102,7 @@
 
         <div class="contact-map-container shadow-sm">
             <iframe
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d125322.44153114513!2d76.88483281989437!3d11.012014524021207!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3ba859af2f973901%3A0x2627a85b73b366!2sCoimbatore%2C%20Tamil%20Nadu!5e0!3m2!1sen!2sin!4v1700000000000!5m2!1sen!2sin"
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3891.472039344908!2d78.6951547!3d12.7478278!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bad0878ad856af9%3A0x9b818e6d12aed537!2sVinayakar%20Kovil%20St%2C%20Tamil%20Nadu%20635807!5e0!3m2!1sen!2sin!4v1777699836439!5m2!1sen!2sin"
                 width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy">
             </iframe>
         </div>

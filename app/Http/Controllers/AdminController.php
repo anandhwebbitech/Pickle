@@ -414,5 +414,8 @@ private function shortEmbed($url)
 
     return 'https://www.youtube.com/embed/' . $id;
 }
-
+  public function Offer()
+    {
+        return view('admin.pages.coupon-code');
+    }
 }

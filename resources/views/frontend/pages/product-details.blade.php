@@ -29,54 +29,49 @@
 
                 <div class="col-lg-6">
                     <div class="swiper main-swiper">
+
                         <div class="swiper-wrapper">
-                            @php
-                                // Default image if array is empty
-                                $defaultImage = $product->image;
 
-                                // Decode JSON string if needed
-                                $images = is_array($product->image) 
-                                            ? $product->image 
-                                            : (is_string($product->image) ? json_decode($product->image, true) : [$product->image]);
+                            @foreach($images as $img)
 
-                                // Ensure $images is an array
-                                $images = $images ?: [];
+                                <div class="swiper-slide text-center">
+                                    <img src="{{ asset('public/uploads/products/' . $img) }}" class="img-fluid">
+                                </div>
 
-                                // Get main and hover images with fallback
-                                $mainImage = $images[0] ?? $defaultImage;
-                                $hoverImage = $images[1] ?? $defaultImage;
-                            @endphp
-                            <div class="swiper-slide text-center"><img
-                                    src="{{ asset('public/uploads/products/' . $mainImage) }}" class="img-fluid"></div>
-                            <div class="swiper-slide text-center"><img
-                                    src="{{ asset('public/uploads/products/' . $hoverImage) }}" class="img-fluid"></div>
+                            @endforeach
+
                         </div>
+
                         <div class="swiper-button-next text-danger"></div>
                         <div class="swiper-button-prev text-danger"></div>
+
                     </div>
                     <div thumbsSlider="" class="swiper thumb-swiper">
+
                         @php
-                            // Default image if array is empty
-                            $defaultImage = $product->image;
+                            // Decode images
+                            $images = is_array($product->image)
+                                ? $product->image
+                                : (is_string($product->image)
+                                    ? json_decode($product->image, true)
+                                    : [$product->image]);
 
-                            // Decode JSON string if needed
-                            $images = is_array($product->image) 
-                                        ? $product->image 
-                                        : (is_string($product->image) ? json_decode($product->image, true) : [$product->image]);
-
-                            // Ensure $images is an array
+                            // Ensure array
                             $images = $images ?: [];
-
-                            // Get main and hover images with fallback
-                            $mainImage = $images[0] ?? $defaultImage;
-                            $hoverImage = $images[1] ?? $defaultImage;
                         @endphp
+
                         <div class="swiper-wrapper">
-                            <div class="swiper-slide"><img src="{{ asset('public/uploads/products/' . $mainImage) }}">
-                            </div>
-                            <div class="swiper-slide"><img src="{{ asset('public/uploads/products/' . $hoverImage) }}">
-                            </div>
+
+                            @foreach($images as $img)
+
+                                <div class="swiper-slide">
+                                    <img src="{{ asset('public/uploads/products/' . $img) }}" alt="Product Image">
+                                </div>
+
+                            @endforeach
+
                         </div>
+
                     </div>
                 </div>
 
@@ -551,6 +546,24 @@ function copyToClipProduct() {
         alert("Failed to copy!");
     });
 }
+
+var thumbsSwiper = new Swiper(".thumb-swiper", {
+    spaceBetween: 10,
+    slidesPerView: 4,
+    freeMode: true,
+    watchSlidesProgress: true,
+});
+
+var mainSwiper = new Swiper(".main-swiper", {
+    spaceBetween: 10,
+    navigation: {
+        nextEl: ".swiper-button-next",
+        prevEl: ".swiper-button-prev",
+    },
+    thumbs: {
+        swiper: thumbsSwiper,
+    },
+});
 </script>
 @endpush
 

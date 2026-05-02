@@ -7,10 +7,10 @@
                     <div class="mb-4">
                         <a href="{{ route("home") }}"><img src="{{ asset('asset/img/anni-logo.png') }}"
                                 alt="Yummy Pickle" style="width: 100px;" class="mb-2"></a>
-                        <h5 class="fw-bold mb-0 text-ylo">Yummy Pickle</h5>
+                        {{-- <h5 class="fw-bold mb-0 text-ylo">Yummy Pickle</h5> --}}
                     </div>
                     <p class="text-ylo small lh-lg">
-                        At UV Food Products, we believe that quality is the foundation of trust. That’s why we are
+                        At AnNi's Kitchen Products, we believe that quality is the foundation of trust. That’s why we are
                         dedicated to producing and delivering the purest and most authentic cold-pressed oils.
                     </p>
                     <div class="d-flex gap-2 mt-4 mb-4">

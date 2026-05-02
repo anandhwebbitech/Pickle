@@ -5,9 +5,9 @@ use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ComboOfferController;
 use App\Http\Controllers\FrontendController;
 use Illuminate\Support\Facades\Route;
-
 
 Route::get('/', action: [FrontendController::class,'Home'])->name('home');
 Route::get('home', action: [FrontendController::class,'Home'])->name('home');
@@ -138,6 +138,19 @@ Route::middleware(['admin'])->group(function () {
     Route::post('/update-delivery/{id}', [ProductController::class, 'updateDelivery'])->name('update.delivery');
 
     Route::get('/admin/order-view/{id}', [ProductController::class, 'viewOrder'])->name('admin.order.view');
+    Route::post('/coupons/feature-toggle', [CouponController::class, 'featureToggle']) ->name('coupons.feature.toggle');
+
+    // Offers
+
 });
 Route::post('/send-contact', [FrontendController::class, 'send'])->name('contact.send');
 Route::get('/search-products', [FrontendController::class, 'search'])->name('products.search');
+
+Route::get('/track-order/{id}', [FrontendController::class, 'trackOrder'])
+    ->name('track.order');
+
+
+Route::resource('combo-products', ComboOfferController::class);
+Route::get('combo-products-datatable', [ComboOfferController::class, 'datatable'])
+->name('combo-products.datatable');
+Route::get('comboproduct', [AdminController::class, 'index'])->name('couponpage');

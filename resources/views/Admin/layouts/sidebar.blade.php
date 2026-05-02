@@ -60,6 +60,12 @@
                 <span class="menu-text">Products</span>
             </a>
         </li>
+        <li>
+            <a href="{{ route('productpage') }}">
+                <i class="bi bi-box-seam"></i>
+                <span class="menu-text">Combo Products</span>
+            </a>
+        </li>
 
         <li>
             <a href="{{route('couponpage')}}">

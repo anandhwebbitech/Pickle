@@ -131,6 +131,7 @@
                         <th>value</th>
                         <th>Expiry Date</th>
                         <th>Limit</th>
+                        <th>Home</th>
                         <th width="120">Status</th>
                         <th width="140">Action</th>
                     </tr>
@@ -360,6 +361,7 @@ $(document).ready(function () {
             { data: 'value' },
             { data: 'expiry_date' },
             { data: 'use_limit' },
+            { data: 'featured', orderable: false, searchable: false },
             { data: 'status', orderable: false, searchable: false },
             { data: 'action', orderable: false, searchable: false }
         ],
@@ -537,6 +539,58 @@ $(document).on('click', '.deleteBtn', function () {
             });
         }
     });
+});
+
+$(document).on('change', '.featureToggle', function () {
+
+    let id = $(this).data('id');
+
+    $.ajax({
+
+        url: "{{ route('coupons.feature.toggle') }}",
+
+        type: "POST",
+
+        data: {
+
+            _token: "{{ csrf_token() }}",
+
+            id: id
+        },
+
+        beforeSend: function () {
+
+            Swal.fire({
+                title: 'Updating...',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
+        },
+
+        success: function (res) {
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: res.message,
+                timer: 1200,
+                showConfirmButton: false
+            });
+
+            // RELOAD TABLE
+            table.ajax.reload(null, false);
+        },
+
+        error: function () {
+
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Something went wrong'
+            });
+        }
+    });
+
 });
 </script>
 @endpush

@@ -15,7 +15,7 @@
         <div class="legal-content-block">
             <h3 class="legal-block-title">Introduction</h3>
             <p class="legal-text-body">
-               Welcome to Annis_kitche. (“Company”, “we”, “our”, “us”). These Terms and Conditions (“Terms”) govern your use of our website, anniskitchen.com (“Website”). By accessing or using our Website, you agree to comply with these Terms. If you do not agree, you should discontinue using the Website immediately.
+               Welcome to AnNi's_kitchen. (“Company”, “we”, “our”, “us”). These Terms and Conditions (“Terms”) govern your use of our website, anniskitchen.com (“Website”). By accessing or using our Website, you agree to comply with these Terms. If you do not agree, you should discontinue using the Website immediately.
 
                 We reserve the right to update or modify these Terms at any time without prior notice. It is your responsibility to review these Terms periodically. Continued use of the Website after updates implies your acceptance of the revised Terms.
             </p>
@@ -24,7 +24,7 @@
         <div class="legal-content-block">
             <h3 class="legal-block-title">Intellectual Property</h3>
             <p class="legal-text-body">
-                All content, including but not limited to text, images, logos, graphics, product descriptions, and website design, is the exclusive property of Anni's Kitchen and is protected by copyright, trademark, and other intellectual property laws.
+                All content, including but not limited to text, images, logos, graphics, product descriptions, and website design, is the exclusive property of  AnNi's Kitchen and is protected by copyright, trademark, and other intellectual property laws.
             </p>
             <p class="legal-text-body">
                 You may not copy, reproduce, distribute, or exploit any content from this Website for commercial or non-commercial purposes without prior written permission from us. Any unauthorized use of our intellectual property may result in legal action.
@@ -63,7 +63,7 @@
         <div class="legal-content-block">
             <h3 class="legal-block-title">Shipping and Delivery</h3>
             <p class="legal-text-body">
-                At Anni's Kitchen, we strive to process and deliver orders efficiently. Please review our shipping and delivery policies below:
+                At  AnNi's Kitchen, we strive to process and deliver orders efficiently. Please review our shipping and delivery policies below:
 
                 Order Processing: All orders are processed within 3 to 5 business days after confirmation. Processing times may vary during peak seasons, holidays, or due to unforeseen circumstances.
 
@@ -77,7 +77,7 @@
          <div class="legal-content-block">
             <h3 class="legal-block-title">Limitation of Liability</h3>
             <p class="legal-text-body">
-                While we make every effort to provide accurate information and high-quality service,  Anni's Kitchen is not responsible for:
+                While we make every effort to provide accurate information and high-quality service,   AnNi's Kitchen is not responsible for:
                 <ul>
                     <li>
                         Any delays or disruptions in service due to factors beyond our control.

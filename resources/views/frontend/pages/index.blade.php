@@ -211,7 +211,7 @@
                         <a href="{{ route('product') }}" class="stretched-link"></a>
                     </div>
 
-                    <img src="{{ asset('asset/img/Maskgroup.png') }}" class="bento-asset-bottom-large"
+                   <img src="{{ asset('public/asset/img/prawns.webp') }}" class="bento-asset-bottom-large"
                         alt="New Launch Pickle">
                 </div>
 
@@ -222,11 +222,17 @@
                         <div class="promo-inner-container " onclick="copyToClipboard('YUMMY20', this)">
                             <span class="badge-label mb-2" style="background: #ffe5e7; color: #a71d2a;">Limited Offer</span>
                             <h4 class="fw-bold text-dark mt-2 mb-3">Special Discount</h4>
-                            <div class="promo-code-wrapper">
-                                <span class="promo-code-dashed" id="promoCode">YUMMY20</span>
-                            </div>
-                            <small class="copy-hint">Click to Copy</small>
-                            <p class="small fw-bold text-muted mt-3 mb-0">Use at checkout for 20% OFF</p>
+                            @if($showcoupon)
+                                <div class="promo-code-wrapper">
+                                    <span class="promo-code-dashed" id="promoCode">{{ $showcoupon->code }}</span>
+                                </div>
+                                <small class="copy-hint">Click to Copy</small>
+                                @if ($showcoupon->type != 1)
+                                <p class="small fw-bold text-muted mt-3 mb-0">Use at checkout for {{ $showcoupon->value }}  Rs OFF</p>
+                                @else
+                                <p class="small fw-bold text-muted mt-3 mb-0">Use at checkout for {{ $showcoupon->value }}% OFF</p>
+                                @endif
+                            @endif
                         </div>
 
                     </div>
@@ -246,7 +252,7 @@
                             Shop All Pickles
                         </a>
                     </div>
-                    <img src="asset/img/product/mango-pro.png" class="bento-asset-center" alt="Pickle Jar">
+                     <img src="public/asset/img/tuna.webp" class="bento-asset-center" alt="Pickle Jar">
                 </div>
             </div>
 
